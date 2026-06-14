@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>每日睡眠记录</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, "Microsoft YaHei", sans-serif; background: #f0f4f8; color: #333; padding: 20px; min-height: 100vh; display: flex; justify-content: center; }
+.container { max-width: 600px; width: 100%; }
+h1 { text-align: center; color: #1a365d; margin-bottom: 24px; }
+.card { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+.form-group { margin-bottom: 14px; }
+.form-group:last-child { margin-bottom: 0; }
+label { display: block; font-size: 14px; color: #555; margin-bottom: 4px; font-weight: 500; }
+input[type="date"], input[type="time"] { width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 15px; outline: none; transition: border .2s; }
+input:focus { border-color: #3b82f6; }
+.row { display: flex; gap: 12px; }
+.row .form-group { flex: 1; }
+.btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; transition: background .2s; }
+.btn-primary { background: #3b82f6; color: #fff; }
+.btn-primary:hover { background: #2563eb; }
+.btn-danger { background: #ef4444; color: #fff; padding: 6px 12px; font-size: 13px; width: auto; }
+.btn-danger:hover { background: #dc2626; }
+.record { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
+.record:last-child { border-bottom: none; }
+.record-info { flex: 1; }
+.record-date { font-weight: 600; color: #1a365d; }
+.record-detail { font-size: 13px; color: #888; margin-top: 2px; }
+.record-duration { font-size: 15px; font-weight: 600; color: #3b82f6; }
+.empty { text-align: center; color: #999; padding: 32px 0; }
+.stats { display: flex; gap: 12px; }
+.stat { flex: 1; text-align: center; padding: 12px; background: #f8fafc; border-radius: 8px; }
+.stat-value { font-size: 24px; font-weight: 700; color: #1a365d; }
+.stat-label { font-size: 12px; color: #888; margin-top: 2px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>每日睡眠记录</h1>
+
+  <div class="card">
+    <div class="row">
+      <div class="form-group">
+        <label>日期</label>
+        <input type="date" id="date">
+      </div>
+    </div>
+    <div class="row">
+      <div class="form-group">
+        <label>入睡时间</label>
+        <input type="time" id="bedtime" value="23:00">
+      </div>
+      <div class="form-group">
+        <label>起床时间</label>
+        <input type="time" id="waketime" value="07:00">
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="saveRecord()">保存记录</button>
+  </div>
+
+  <div class="card">
+    <div class="stats" id="stats"></div>
+  </div>
+
+  <div class="card">
+    <h2 style="font-size:18px; margin-bottom:12px; color:#1a365d;">历史记录</h2>
+    <div id="records"></div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'sleep_records';
+
+function getRecords() {
+  return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+}
+
+function saveRecords(records) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+}
+
+function calcDuration(bed, wake) {
+  let [bh, bm] = bed.split(':').map(Number);
+  let [wh, wm] = wake.split(':').map(Number);
+  let start = bh * 60 + bm;
+  let end = wh * 60 + wm;
+  if (end <= start) end += 1440;
+  return end - start;
+}
+
+function fmtDuration(min) {
+  let h = Math.floor(min / 60);
+  let m = min % 60;
+  return h + '时' + m + '分';
+}
+
+function fmtDate(dateStr) {
+  let d = new Date(dateStr + 'T00:00:00');
+  let m = d.getMonth() + 1;
+  let day = d.getDate();
+  let weekdays = ['日','一','二','三','四','五','六'];
+  return m + '月' + day + '日 周' + weekdays[d.getDay()];
+}
+
+function saveRecord() {
+  let date = document.getElementById('date').value;
+  let bedtime = document.getElementById('bedtime').value;
+  let waketime = document.getElementById('waketime').value;
+  if (!date || !bedtime || !waketime) { alert('请填写完整信息'); return; }
+
+  let records = getRecords();
+  let idx = records.findIndex(r => r.date === date);
+  let record = { date, bedtime, waketime, duration: calcDuration(bedtime, waketime) };
+  if (idx >= 0) records[idx] = record;
+  else records.push(record);
+  records.sort((a, b) => a.date < b.date ? 1 : -1);
+  saveRecords(records);
+  document.getElementById('date').value = '';
+  render();
+}
+
+function deleteRecord(date) {
+  let records = getRecords().filter(r => r.date !== date);
+  saveRecords(records);
+  render();
+}
+
+function render() {
+  let records = getRecords();
+  let container = document.getElementById('records');
+  let statsEl = document.getElementById('stats');
+
+  if (records.length === 0) {
+    container.innerHTML = '<div class="empty">暂无记录</div>';
+    statsEl.innerHTML = '';
+    return;
+  }
+
+  let total = records.reduce((s, r) => s + r.duration, 0);
+  let avg = Math.round(total / records.length);
+  let recent7 = records.filter(r => {
+    let diff = (new Date() - new Date(r.date + 'T00:00:00')) / 86400000;
+    return diff < 7;
+  });
+  let avg7 = recent7.length ? Math.round(recent7.reduce((s, r) => s + r.duration, 0) / recent7.length) : avg;
+
+  statsEl.innerHTML =
+    '<div class="stat"><div class="stat-value">' + fmtDuration(avg) + '</div><div class="stat-label">平均睡眠</div></div>' +
+    '<div class="stat"><div class="stat-value">' + fmtDuration(avg7) + '</div><div class="stat-label">近7天平均</div></div>' +
+    '<div class="stat"><div class="stat-value">' + records.length + '</div><div class="stat-label">总天数</div></div>';
+
+  container.innerHTML = records.map(r =>
+    '<div class="record">' +
+      '<div class="record-info">' +
+        '<div class="record-date">' + fmtDate(r.date) + '</div>' +
+        '<div class="record-detail">' + r.bedtime + ' → ' + r.waketime + '</div>' +
+      '</div>' +
+      '<div style="display:flex;align-items:center;gap:10px;">' +
+        '<span class="record-duration">' + fmtDuration(r.duration) + '</span>' +
+        '<button class="btn btn-danger" onclick="deleteRecord(\'' + r.date + '\')">删除</button>' +
+      '</div>' +
+    '</div>'
+  ).join('');
+}
+
+document.getElementById('date').value = new Date().toISOString().slice(0, 10);
+render();
+</script>
+</body>
+</html>
