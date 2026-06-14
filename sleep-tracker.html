@@ -69,11 +69,22 @@ input:focus { border-color: #3b82f6; }
   </div>
 </div>
 
-<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script>
 const SUPABASE_URL = 'https://gtgtbsylalibqhxztcta.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_1YHehRDqEXk2IRCJc3AmyA__8B5fe-x';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const headers = {
+  'apikey': SUPABASE_ANON_KEY,
+  'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+  'Content-Type': 'application/json',
+  'Prefer': 'return=representation'
+};
+
+async function api(path, options) {
+  let res = await fetch(SUPABASE_URL + '/rest/v1/' + path, { headers, ...options });
+  if (!res.ok) throw new Error(res.status + ' ' + (await res.text()));
+  return res.json();
+}
 
 function calcDuration(bed, wake) {
   let [bh, bm] = bed.split(':').map(Number);
@@ -99,9 +110,9 @@ function fmtDate(dateStr) {
 }
 
 async function getRecords() {
-  let { data, error } = await supabase.from('sleep_records').select('*').order('date', { ascending: false });
-  if (error) { console.error(error); return []; }
-  return data;
+  try {
+    return await api('sleep_records?order=date.desc');
+  } catch (e) { console.error(e); return []; }
 }
 
 async function saveRecord() {
@@ -111,19 +122,22 @@ async function saveRecord() {
   if (!date || !bedtime || !waketime) { alert('请填写完整信息'); return; }
   let duration = calcDuration(bedtime, waketime);
 
-  let { error } = await supabase.from('sleep_records').upsert(
-    { date, bedtime, waketime, duration },
-    { onConflict: 'date' }
-  );
-  if (error) { alert('保存失败：' + error.message); return; }
-  document.getElementById('date').value = '';
-  render();
+  try {
+    await api('sleep_records?on_conflict=date', {
+      method: 'POST',
+      body: JSON.stringify({ date, bedtime, waketime, duration }),
+      headers: { ...headers, 'Prefer': 'resolution=merge-duplicates,return=representation' }
+    });
+    document.getElementById('date').value = '';
+    render();
+  } catch (e) { alert('保存失败：' + e.message); }
 }
 
 async function deleteRecord(date) {
-  let { error } = await supabase.from('sleep_records').delete().eq('date', date);
-  if (error) { alert('删除失败：' + error.message); return; }
-  render();
+  try {
+    await api('sleep_records?date=eq.' + date, { method: 'DELETE' });
+    render();
+  } catch (e) { alert('删除失败：' + e.message); }
 }
 
 async function render() {
