@@ -69,16 +69,11 @@ input:focus { border-color: #3b82f6; }
   </div>
 </div>
 
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script>
-const STORAGE_KEY = 'sleep_records';
-
-function getRecords() {
-  return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-}
-
-function saveRecords(records) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-}
+const SUPABASE_URL = 'https://gtgtbsylalibqhxztcta.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_1YHehRDqEXk2IRCJc3AmyA__8B5fe-x';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 function calcDuration(bed, wake) {
   let [bh, bm] = bed.split(':').map(Number);
@@ -103,31 +98,36 @@ function fmtDate(dateStr) {
   return m + '月' + day + '日 周' + weekdays[d.getDay()];
 }
 
-function saveRecord() {
+async function getRecords() {
+  let { data, error } = await supabase.from('sleep_records').select('*').order('date', { ascending: false });
+  if (error) { console.error(error); return []; }
+  return data;
+}
+
+async function saveRecord() {
   let date = document.getElementById('date').value;
   let bedtime = document.getElementById('bedtime').value;
   let waketime = document.getElementById('waketime').value;
   if (!date || !bedtime || !waketime) { alert('请填写完整信息'); return; }
+  let duration = calcDuration(bedtime, waketime);
 
-  let records = getRecords();
-  let idx = records.findIndex(r => r.date === date);
-  let record = { date, bedtime, waketime, duration: calcDuration(bedtime, waketime) };
-  if (idx >= 0) records[idx] = record;
-  else records.push(record);
-  records.sort((a, b) => a.date < b.date ? 1 : -1);
-  saveRecords(records);
+  let { error } = await supabase.from('sleep_records').upsert(
+    { date, bedtime, waketime, duration },
+    { onConflict: 'date' }
+  );
+  if (error) { alert('保存失败：' + error.message); return; }
   document.getElementById('date').value = '';
   render();
 }
 
-function deleteRecord(date) {
-  let records = getRecords().filter(r => r.date !== date);
-  saveRecords(records);
+async function deleteRecord(date) {
+  let { error } = await supabase.from('sleep_records').delete().eq('date', date);
+  if (error) { alert('删除失败：' + error.message); return; }
   render();
 }
 
-function render() {
-  let records = getRecords();
+async function render() {
+  let records = await getRecords();
   let container = document.getElementById('records');
   let statsEl = document.getElementById('stats');
 
@@ -139,8 +139,9 @@ function render() {
 
   let total = records.reduce((s, r) => s + r.duration, 0);
   let avg = Math.round(total / records.length);
+  let today = new Date();
   let recent7 = records.filter(r => {
-    let diff = (new Date() - new Date(r.date + 'T00:00:00')) / 86400000;
+    let diff = (today - new Date(r.date + 'T00:00:00')) / 86400000;
     return diff < 7;
   });
   let avg7 = recent7.length ? Math.round(recent7.reduce((s, r) => s + r.duration, 0) / recent7.length) : avg;
