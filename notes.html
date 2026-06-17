@@ -7,99 +7,241 @@
 <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
+:root {
+  --bg: #f0f4f8;
+  --surface: #fff;
+  --text: #333;
+  --text-secondary: #888;
+  --text-muted: #bbb;
+  --border: #d1d5db;
+  --border-light: #e5e7eb;
+  --border-lighter: #f0f0f0;
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --primary-light: #dbeafe;
+  --primary-text: #1e40af;
+  --primary-bg: rgba(59,130,246,.1);
+  --danger: #ef4444;
+  --danger-hover: #dc2626;
+  --danger-bg: #fee2e2;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --toolbar-bg: #f8fafc;
+  --input-bg: #fff;
+  --input-bg-alt: #fafafa;
+  --shadow: rgba(0,0,0,.08);
+  --hover-bg: #f8fafc;
+  --card-shadow: 0 2px 8px rgba(0,0,0,.08);
+  --overlay: rgba(0,0,0,.5);
+  --scrollbar: #d1d5db;
+  --scrollbar-hover: #9ca3af;
+  --pin-color: #f59e0b;
+}
+[data-theme="dark"] {
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --text: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --border: #334155;
+  --border-light: #1e293b;
+  --border-lighter: #1e293b;
+  --primary: #60a5fa;
+  --primary-hover: #3b82f6;
+  --primary-light: #1e3a5f;
+  --primary-text: #93c5fd;
+  --primary-bg: rgba(96,165,250,.15);
+  --danger: #f87171;
+  --danger-hover: #ef4444;
+  --danger-bg: #3b1a1a;
+  --toolbar-bg: #1e293b;
+  --input-bg: #1e293b;
+  --input-bg-alt: #0f172a;
+  --shadow: rgba(0,0,0,.3);
+  --hover-bg: #1e293b;
+  --card-shadow: 0 2px 8px rgba(0,0,0,.3);
+  --overlay: rgba(0,0,0,.7);
+  --scrollbar: #334155;
+  --scrollbar-hover: #475569;
+  --pin-color: #fbbf24;
+}
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: -apple-system, "Microsoft YaHei", sans-serif; background: #f0f4f8; color: #333; min-height: 100vh; }
+body { font-family: -apple-system, "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; transition: background .3s, color .3s; }
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-hover); }
 .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-.app-header { text-align: center; margin-bottom: 24px; }
-.app-header h1 { color: #1a365d; font-size: 26px; }
-.app-header p { color: #888; font-size: 13px; margin-top: 4px; }
+.app-header { text-align: center; margin-bottom: 24px; position: relative; }
+.app-header h1 { color: var(--primary); font-size: 26px; }
+.app-header p { color: var(--text-secondary); font-size: 13px; margin-top: 4px; }
 .main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
-.card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
-.card-title { font-size: 16px; color: #1a365d; margin-bottom: 16px; font-weight: 600; }
+.card { background: var(--surface); border-radius: 12px; padding: 20px; box-shadow: var(--card-shadow); transition: background .3s, box-shadow .3s; }
+.card-title { font-size: 16px; color: var(--text); margin-bottom: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
 .form-group { margin-bottom: 16px; }
 .form-group:last-child { margin-bottom: 0; }
-.form-group label { display: block; font-size: 13px; color: #666; margin-bottom: 6px; font-weight: 500; }
+.form-group label { display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 500; }
 .form-group input[type="date"],
 .form-group input[type="text"],
 .form-group input[type="email"],
-.form-group input[type="password"] { width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 15px; outline: none; transition: border .2s; background: #fff; }
-.form-group input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.1); }
+.form-group input[type="password"] { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 15px; outline: none; transition: border .2s, background .2s; background: var(--input-bg); color: var(--text); }
+.form-group input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-bg); }
 .form-row { display: flex; gap: 12px; }
 .form-row .form-group { flex: 1; }
 #editor-container { height: 280px; }
-.ql-toolbar { border-radius: 8px 8px 0 0; border-color: #d1d5db; background: #f8fafc; }
-.ql-container { border-radius: 0 0 8px 8px; border-color: #d1d5db; font-size: 15px; }
+.ql-toolbar { border-radius: 8px 8px 0 0; border-color: var(--border); background: var(--toolbar-bg); }
+.ql-container { border-radius: 0 0 8px 8px; border-color: var(--border); font-size: 15px; }
 .ql-editor { min-height: 260px; }
 .ql-toolbar button:hover .ql-stroke,
-.ql-toolbar button.ql-active .ql-stroke { stroke: #3b82f6; }
+.ql-toolbar button.ql-active .ql-stroke { stroke: var(--primary); }
 .ql-toolbar button:hover .ql-fill,
-.ql-toolbar button.ql-active .ql-fill { fill: #3b82f6; }
+.ql-toolbar button.ql-active .ql-fill { fill: var(--primary); }
 .ql-toolbar .ql-picker-label:hover,
-.ql-toolbar .ql-picker-label.ql-active { color: #3b82f6; }
-.ql-toolbar .ql-picker-item:hover { color: #3b82f6; }
+.ql-toolbar .ql-picker-label.ql-active { color: var(--primary); }
+.ql-toolbar .ql-picker-item:hover { color: var(--primary); }
+.ql-editor { color: var(--text); }
+.ql-editor.ql-blank::before { color: var(--text-muted); }
+.ql-snow .ql-stroke { stroke: var(--text-secondary); }
+.ql-snow .ql-fill { fill: var(--text-secondary); }
+.ql-snow .ql-picker { color: var(--text-secondary); }
+.ql-snow .ql-picker-options { background: var(--surface); border-color: var(--border); }
+.ql-snow .ql-tooltip { background: var(--surface); border-color: var(--border); color: var(--text); }
+.ql-snow .ql-tooltip input[type=text] { background: var(--input-bg); border-color: var(--border); color: var(--text); }
 .btn { padding: 10px 24px; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; transition: all .2s; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
-.btn-primary { background: #3b82f6; color: #fff; }
-.btn-primary:hover { background: #2563eb; }
-.btn-primary:disabled { background: #93c5fd; cursor: not-allowed; }
-.btn-secondary { background: #e5e7eb; color: #555; }
-.btn-secondary:hover { background: #d1d5db; }
-.btn-danger { background: #ef4444; color: #fff; }
-.btn-danger:hover { background: #dc2626; }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-hover); }
+.btn-primary:disabled { background: var(--text-muted); cursor: not-allowed; }
+.btn-secondary { background: var(--border-light); color: var(--text-secondary); }
+.btn-secondary:hover { background: var(--border); color: var(--text); }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-danger:hover { background: var(--danger-hover); }
+.btn-ghost { background: transparent; color: var(--text-secondary); }
+.btn-ghost:hover { background: var(--hover-bg); color: var(--primary); }
 .btn-sm { padding: 6px 14px; font-size: 13px; }
+.btn-xs { padding: 4px 10px; font-size: 12px; border-radius: 6px; }
 .form-actions { display: flex; gap: 10px; margin-top: 16px; }
 .form-actions .btn-primary { flex: 1; justify-content: center; }
 .tag-input-wrap { display: flex; gap: 8px; flex-wrap: wrap; }
-#tagInput { flex: 1; min-width: 120px; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; outline: none; transition: border .2s; }
-#tagInput:focus { border-color: #3b82f6; }
+#tagInput { flex: 1; min-width: 120px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; transition: border .2s; background: var(--input-bg); color: var(--text); }
+#tagInput:focus { border-color: var(--primary); }
 .tag-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-.tag-badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; background: #dbeafe; color: #1e40af; border-radius: 6px; font-size: 13px; font-weight: 500; }
-.tag-badge .remove-tag { cursor: pointer; font-size: 11px; opacity: .6; transition: opacity .2s; }
+.tag-badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; background: var(--primary-light); color: var(--primary-text); border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; transition: opacity .2s; }
+.tag-badge:hover { opacity: .8; }
+.tag-badge .remove-tag { cursor: pointer; font-size: 11px; opacity: .6; transition: opacity .2s; margin-left: 2px; }
 .tag-badge .remove-tag:hover { opacity: 1; }
-.existing-tags { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid #f0f0f0; }
-.existing-tags-label { font-size: 12px; color: #999; }
-.preset-tag { padding: 3px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 12px; cursor: pointer; color: #666; transition: all .2s; background: #fafafa; }
-.preset-tag:hover { border-color: #3b82f6; color: #3b82f6; }
-.preset-tag.active { background: #dbeafe; border-color: #dbeafe; color: #1e40af; }
+.existing-tags { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-lighter); }
+.existing-tags-label { font-size: 12px; color: var(--text-muted); }
+.preset-tag { padding: 3px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; cursor: pointer; color: var(--text-secondary); transition: all .2s; background: var(--input-bg-alt); }
+.preset-tag:hover { border-color: var(--primary); color: var(--primary); }
+.preset-tag.active { background: var(--primary-light); border-color: var(--primary-light); color: var(--primary-text); }
 .search-wrap { position: relative; margin-bottom: 16px; }
-.search-wrap input { width: 100%; padding: 10px 12px 10px 38px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; outline: none; transition: border .2s; background: #fafafa; }
-.search-wrap input:focus { border-color: #3b82f6; background: #fff; }
-.search-wrap .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #aaa; font-size: 14px; }
-.note-item { padding: 12px 0; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background .15s; border-radius: 4px; }
-.note-item:hover { background: #f8fafc; margin: 0 -8px; padding: 12px 8px; }
+.search-wrap input { width: 100%; padding: 10px 12px 10px 38px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; transition: border .2s, background .2s; background: var(--input-bg-alt); color: var(--text); }
+.search-wrap input:focus { border-color: var(--primary); background: var(--input-bg); }
+.search-wrap .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 14px; }
+.note-item { padding: 12px 0; border-bottom: 1px solid var(--border-lighter); cursor: pointer; transition: background .15s; border-radius: 4px; }
+.note-item:hover { background: var(--hover-bg); margin: 0 -8px; padding: 12px 8px; }
 .note-item:last-child { border-bottom: none; }
 .note-item-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
-.note-item-title { font-weight: 600; color: #1a365d; font-size: 15px; line-height: 1.4; flex: 1; }
-.note-item-title:hover { color: #3b82f6; }
+.note-item-title { font-weight: 600; color: var(--text); font-size: 15px; line-height: 1.4; flex: 1; display: flex; align-items: center; gap: 6px; }
+.note-item-title:hover { color: var(--primary); }
 .note-item-meta { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-.note-item-date { font-size: 12px; color: #aaa; white-space: nowrap; }
-.note-item-actions { display: none; }
-.note-item:hover .note-item-actions { display: flex; gap: 2px; }
-.btn-icon { background: none; border: none; cursor: pointer; padding: 4px 6px; border-radius: 4px; color: #999; transition: all .15s; font-size: 13px; }
-.btn-icon:hover { background: #f0f0f0; color: #555; }
-.btn-icon-danger:hover { background: #fee2e2; color: #ef4444; }
-.note-item-snippet { font-size: 13px; color: #999; line-height: 1.5; margin-top: 4px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.note-item-date { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+.note-item-actions { display: none; gap: 2px; }
+.note-item:hover .note-item-actions { display: flex; }
+.btn-icon { background: none; border: none; cursor: pointer; padding: 4px 6px; border-radius: 4px; color: var(--text-muted); transition: all .15s; font-size: 13px; }
+.btn-icon:hover { background: var(--border-lighter); color: var(--text-secondary); }
+.btn-icon-danger:hover { background: var(--danger-bg); color: var(--danger); }
+.btn-icon-pin:hover { color: var(--pin-color); }
+.btn-icon-pin.active { color: var(--pin-color); }
+.note-item-snippet { font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin-top: 4px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .note-item-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
-.note-item-tags .tag-badge { font-size: 11px; padding: 2px 8px; }
-.date-separator { padding: 12px 0 6px; font-size: 13px; color: #999; font-weight: 600; border-bottom: 1px solid #e5e7eb; margin-top: 4px; }
+.note-item-tags .tag-badge { font-size: 11px; padding: 2px 8px; cursor: pointer; }
+.note-item-archived { opacity: .5; }
+.note-item-archived .note-item-title { color: var(--text-muted); }
+.date-separator { padding: 12px 0 6px; font-size: 13px; color: var(--text-muted); font-weight: 600; border-bottom: 1px solid var(--border-light); margin-top: 4px; display: flex; align-items: center; justify-content: space-between; }
 .date-separator:first-child { padding-top: 0; }
-.empty { text-align: center; color: #bbb; padding: 48px 0; font-size: 14px; }
-.empty i { font-size: 36px; margin-bottom: 12px; color: #ddd; display: block; }
-.empty p { margin-top: 4px; color: #ccc; font-size: 13px; }
+.empty { text-align: center; color: var(--text-muted); padding: 48px 0; font-size: 14px; }
+.empty i { font-size: 36px; margin-bottom: 12px; color: var(--border); display: block; }
+.empty p { margin-top: 4px; color: var(--text-muted); font-size: 13px; }
 .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-20px); padding: 12px 24px; border-radius: 8px; color: #fff; font-size: 14px; z-index: 9999; opacity: 0; transition: all .3s ease; pointer-events: none; font-weight: 500; box-shadow: 0 4px 12px rgba(0,0,0,.15); }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-.toast.success { background: #10b981; }
-.toast.error { background: #ef4444; }
-.toast.warning { background: #f59e0b; }
+.toast.success { background: var(--success); }
+.toast.error { background: var(--danger); }
+.toast.warning { background: var(--warning); }
+.toast.info { background: var(--primary); }
 .login-page { display: none; justify-content: center; padding-top: 80px; }
 .login-card { max-width: 400px; width: 100%; }
 .login-card .card-title { text-align: center; font-size: 18px; }
-.login-desc { text-align: center; color: #888; font-size: 13px; margin-bottom: 24px; }
-.form-footer { text-align: center; margin-top: 16px; font-size: 13px; color: #888; }
-.form-footer a { color: #3b82f6; cursor: pointer; text-decoration: none; }
+.login-desc { text-align: center; color: var(--text-secondary); font-size: 13px; margin-bottom: 24px; }
+.form-footer { text-align: center; margin-top: 16px; font-size: 13px; color: var(--text-secondary); }
+.form-footer a { color: var(--primary); cursor: pointer; text-decoration: none; }
 .form-footer a:hover { text-decoration: underline; }
-.auth-error { color: #ef4444; font-size: 13px; text-align: center; margin-bottom: 12px; display: none; padding: 8px; background: #fef2f2; border-radius: 6px; }
-.user-bar { display: flex; justify-content: flex-end; align-items: center; gap: 12px; padding: 6px 0 12px; font-size: 13px; color: #888; border-bottom: 1px solid #e5e7eb; margin-bottom: 16px; }
-.user-email { font-weight: 500; color: #555; }
+.auth-error { color: var(--danger); font-size: 13px; text-align: center; margin-bottom: 12px; display: none; padding: 8px; background: var(--danger-bg); border-radius: 6px; }
+.user-bar { display: flex; justify-content: space-between; align-items: center; padding: 6px 0 12px; font-size: 13px; color: var(--text-secondary); border-bottom: 1px solid var(--border-light); margin-bottom: 16px; }
+.user-bar-left { display: flex; align-items: center; gap: 12px; }
+.user-bar-right { display: flex; align-items: center; gap: 8px; }
+.user-email { font-weight: 500; color: var(--text); }
+/* Stats bar */
+.stats-bar { display: flex; gap: 16px; flex-wrap: wrap; padding: 10px 0; border-bottom: 1px solid var(--border-lighter); margin-bottom: 12px; }
+.stat-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); }
+.stat-item i { font-size: 12px; }
+.stat-value { color: var(--text); font-weight: 600; }
+/* Auto-save indicator */
+.save-status { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+.save-status.saving { color: var(--warning); }
+.save-status.saved { color: var(--success); }
+.save-status.error { color: var(--danger); }
+/* View toggle */
+.view-toggle { display: flex; gap: 4px; }
+.view-toggle .btn { padding: 4px 10px; font-size: 12px; border-radius: 6px; }
+.view-toggle .btn.active { background: var(--primary-light); color: var(--primary-text); }
+/* Focus mode */
+.focus-mode #editor-container { min-height: 60vh; transition: min-height .3s; }
+.focus-mode .list-panel { display: none; }
+.focus-mode .main-grid { grid-template-columns: 1fr; }
+.focus-mode .stats-bar { display: none; }
+.focus-mode .user-bar { display: none; }
+.focus-mode .app-header { margin-bottom: 12px; }
+.focus-mode .app-header p { display: none; }
+.focus-mode .tag-input-wrap { display: none; }
+.focus-mode .existing-tags { display: none; }
+.focus-mode .form-actions { display: none; }
+.focus-mode #cancelBtn { display: none !important; }
+.focus-mode .card-title { display: none; }
+.focus-mode .form-row .form-group label { display: none; }
+.focus-mode .form-group label { display: none; }
+.focus-exit-btn { display: none; }
+.focus-mode .focus-exit-btn { display: inline-flex; position: fixed; top: 16px; right: 16px; z-index: 100; }
+/* Pin icon */
+.pin-icon { color: var(--pin-color); font-size: 12px; }
+/* Tabs: All / Active / Archived */
+.tab-bar { display: flex; gap: 0; margin-bottom: 12px; border-bottom: 1px solid var(--border-light); }
+.tab-item { padding: 8px 16px; font-size: 13px; cursor: pointer; color: var(--text-muted); border-bottom: 2px solid transparent; transition: all .2s; background: none; border-top: none; border-left: none; border-right: none; font-weight: 500; }
+.tab-item:hover { color: var(--text); }
+.tab-item.active { color: var(--primary); border-bottom-color: var(--primary); }
+/* Scrollable note list */
+.notes-scroll { max-height: 500px; overflow-y: auto; padding-right: 4px; }
+/* Active filter indicator */
+.active-filter { display: flex; align-items: center; gap: 6px; padding: 4px 10px; background: var(--primary-light); color: var(--primary-text); border-radius: 6px; font-size: 12px; margin-bottom: 8px; }
+.active-filter .clear-filter { cursor: pointer; opacity: .6; }
+.active-filter .clear-filter:hover { opacity: 1; }
+/* Context menu for notes (export) */
+.dropdown { position: relative; display: inline-block; }
+.dropdown-menu { display: none; position: absolute; right: 0; top: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 4px 12px var(--shadow); z-index: 50; min-width: 160px; padding: 4px; }
+.dropdown-menu.show { display: block; }
+.dropdown-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; font-size: 13px; color: var(--text); cursor: pointer; border-radius: 6px; transition: background .15s; border: none; background: none; width: 100%; text-align: left; }
+.dropdown-item:hover { background: var(--hover-bg); }
+.dropdown-item i { width: 16px; color: var(--text-muted); }
+/* Confirm dialog */
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--overlay); z-index: 9998; justify-content: center; align-items: center; }
+.modal-overlay.show { display: flex; }
+.modal-box { background: var(--surface); border-radius: 12px; padding: 24px; max-width: 360px; width: 90%; box-shadow: 0 8px 32px var(--shadow); }
+.modal-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+.modal-text { font-size: 14px; color: var(--text-secondary); margin-bottom: 20px; }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+/* Export toast */
+.export-progress { display: none; }
+/* Badge count */
+.badge-count { background: var(--primary-light); color: var(--primary-text); font-size: 11px; padding: 1px 6px; border-radius: 10px; font-weight: 600; }
 @media (max-width: 767px) {
   .main-grid { grid-template-columns: 1fr; }
   .container { padding: 12px; }
@@ -110,6 +252,10 @@ body { font-family: -apple-system, "Microsoft YaHei", sans-serif; background: #f
   .card { padding: 16px; }
   .note-item:hover { margin: 0 -4px; padding: 12px 4px; }
   .login-page { padding-top: 40px; }
+  .notes-scroll { max-height: none; }
+  .stats-bar { gap: 10px; }
+  .user-bar { flex-wrap: wrap; gap: 8px; }
+  .tab-item { padding: 8px 12px; font-size: 12px; }
 }
 </style>
 </head>
@@ -119,7 +265,7 @@ body { font-family: -apple-system, "Microsoft YaHei", sans-serif; background: #f
 
 <div id="loginPage" class="login-page">
   <div class="card login-card">
-    <div class="card-title"><i class="fas fa-book" style="color:#3b82f6;"></i> 每日笔记</div>
+    <div class="card-title"><i class="fas fa-book" style="color:var(--primary);"></i> 每日笔记</div>
     <div class="login-desc">登录后记录每一天的思考与灵感</div>
     <div class="form-group">
       <label>邮箱</label>
@@ -146,19 +292,36 @@ body { font-family: -apple-system, "Microsoft YaHei", sans-serif; background: #f
 
 <div id="appContent" style="display:none;">
   <div class="user-bar">
-    <span><i class="far fa-user-circle"></i> <span class="user-email" id="userEmail"></span></span>
-    <button class="btn btn-secondary btn-sm" onclick="signOut()"><i class="fas fa-sign-out-alt"></i> 退出</button>
+    <div class="user-bar-left">
+      <span><i class="far fa-user-circle"></i> <span class="user-email" id="userEmail"></span></span>
+    </div>
+    <div class="user-bar-right">
+      <span class="save-status" id="saveStatus"><i class="fas fa-check-circle"></i> 已保存</span>
+      <button class="btn btn-ghost btn-xs" onclick="toggleDarkMode()" id="darkModeBtn" title="切换主题"><i class="fas fa-moon"></i></button>
+      <button class="btn btn-ghost btn-xs" onclick="toggleFocusMode()" id="focusModeBtn" title="专注模式"><i class="fas fa-expand"></i></button>
+      <div class="dropdown" id="moreDropdown">
+        <button class="btn btn-ghost btn-xs" onclick="toggleDropdown()" title="更多"><i class="fas fa-ellipsis-v"></i></button>
+        <div class="dropdown-menu" id="dropdownMenu">
+          <button class="dropdown-item" onclick="exportAllNotes()"><i class="fas fa-download"></i> 导出全部为 Markdown</button>
+          <button class="dropdown-item" onclick="showArchivedNotes()"><i class="fas fa-archive"></i> 查看归档</button>
+          <button class="dropdown-item" onclick="signOut()"><i class="fas fa-sign-out-alt"></i> 退出登录</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="app-header">
-    <h1><i class="fas fa-book" style="color:#3b82f6;"></i> 每日笔记</h1>
+    <h1><i class="fas fa-book" style="color:var(--primary);"></i> 每日笔记</h1>
     <p>记录每一天的思考与灵感</p>
   </div>
 
   <div class="main-grid">
     <div class="editor-panel">
       <div class="card">
-        <div class="card-title"><i class="fas fa-edit"></i> 编辑笔记</div>
+        <div class="card-title">
+          <i class="fas fa-edit"></i> <span id="editorTitle">编辑笔记</span>
+          <button class="btn btn-ghost btn-xs focus-exit-btn" onclick="toggleFocusMode()" title="退出专注模式"><i class="fas fa-compress"></i> 退出专注</button>
+        </div>
         <div class="form-row">
           <div class="form-group">
             <label>日期</label>
@@ -174,28 +337,54 @@ body { font-family: -apple-system, "Microsoft YaHei", sans-serif; background: #f
           <div id="editorContainer"></div>
         </div>
         <div class="form-group">
-          <label>标签</label>
+          <label>标签 <span style="font-weight:400;color:var(--text-muted);font-size:12px;">输入后按 Enter 添加，点击标签可筛选</span></label>
           <div class="tag-input-wrap">
-            <input type="text" id="tagInput" placeholder="输入标签后按 Enter">
+            <input type="text" id="tagInput" placeholder="#标签 或纯文本">
           </div>
           <div id="tagList" class="tag-list"></div>
           <div id="existingTags" class="existing-tags" style="display:none;"></div>
         </div>
         <div class="form-actions">
           <button class="btn btn-primary" id="saveBtn" onclick="saveNote()"><i class="fas fa-save"></i> 保存</button>
-          <button class="btn btn-secondary" id="cancelBtn" onclick="clearForm()" style="display:none;"><i class="fas fa-times"></i> 取消</button>
+          <button class="btn btn-secondary" id="cancelBtn" onclick="clearForm()" style="display:none;"><i class="fas fa-times"></i> 取消编辑</button>
         </div>
       </div>
     </div>
 
     <div class="list-panel">
       <div class="card">
-        <div class="card-title"><i class="fas fa-list"></i> 笔记列表</div>
+        <div class="card-title">
+          <i class="fas fa-list"></i> 笔记列表
+          <span style="flex:1;"></span>
+          <span class="save-status" id="noteCount"></span>
+        </div>
+
+        <div class="stats-bar" id="statsBar">
+          <span class="stat-item"><i class="far fa-file-alt"></i> <span class="stat-value" id="statNotes">0</span> 篇</span>
+          <span class="stat-item"><i class="far fa-file-word"></i> <span class="stat-value" id="statWords">0</span> 字</span>
+          <span class="stat-item"><i class="fas fa-tags"></i> <span class="stat-value" id="statTags">0</span> 标签</span>
+          <span class="stat-item"><i class="far fa-clock"></i> <span class="stat-value" id="statStreak">0</span> 天连续</span>
+        </div>
+
+        <div class="tab-bar" id="tabBar">
+          <button class="tab-item active" data-tab="active" onclick="switchTab('active')"><i class="far fa-file"></i> 笔记</button>
+          <button class="tab-item" data-tab="pinned" onclick="switchTab('pinned')"><i class="fas fa-thumbtack"></i> 已置顶</button>
+          <button class="tab-item" data-tab="archived" onclick="switchTab('archived')"><i class="fas fa-archive"></i> 归档</button>
+        </div>
+
+        <div id="activeFilter" class="active-filter" style="display:none;">
+          <i class="fas fa-filter"></i> 标签筛选：<span id="filterTagName"></span>
+          <span class="clear-filter" onclick="clearTagFilter()"><i class="fas fa-times"></i> 清除</span>
+        </div>
+
         <div class="search-wrap">
           <i class="fas fa-search search-icon"></i>
-          <input type="text" id="searchInput" placeholder="搜索笔记标题或内容..." oninput="filterNotes()">
+          <input type="text" id="searchInput" placeholder="搜索笔记标题、内容或 #标签..." oninput="filterNotes()">
         </div>
-        <div id="notesList"></div>
+
+        <div class="notes-scroll" id="notesScroll">
+          <div id="notesList"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -204,6 +393,18 @@ body { font-family: -apple-system, "Microsoft YaHei", sans-serif; background: #f
 </div>
 
 <div id="toast" class="toast"></div>
+
+<!-- Confirm modal -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal-box">
+    <div class="modal-title" id="modalTitle">确认</div>
+    <div class="modal-text" id="modalText">确定执行此操作吗？</div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary btn-sm" onclick="closeModal()">取消</button>
+      <button class="btn btn-danger btn-sm" id="modalConfirmBtn" onclick="closeModal()">确定</button>
+    </div>
+  </div>
+</div>
 
 <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -216,6 +417,13 @@ let notesCache = [];
 let currentNoteId = null;
 let quill = null;
 let authMode = 'login';
+let currentTab = 'active';
+let tagFilter = null;
+let searchKeyword = '';
+let isDarkMode = localStorage.getItem('daily_notes_dark_mode') === 'true';
+let isFocusMode = false;
+let autoSaveTimer = null;
+let confirmCallback = null;
 
 function escapeHtml(str) {
   let div = document.createElement('div');
@@ -241,7 +449,8 @@ function showToast(msg, type) {
   let t = document.getElementById('toast');
   t.textContent = msg;
   t.className = 'toast ' + type + ' show';
-  setTimeout(() => t.classList.remove('show'), 3000);
+  clearTimeout(t._hideTimer);
+  t._hideTimer = setTimeout(() => t.classList.remove('show'), 3000);
 }
 
 function getCurrentTags() {
@@ -255,9 +464,9 @@ function getCurrentTags() {
 function renderTags(tags) {
   let container = document.getElementById('tagList');
   container.innerHTML = tags.map(t =>
-    '<span class="tag-badge" data-tag="' + escapeHtml(t) + '">' +
+    '<span class="tag-badge" data-tag="' + escapeHtml(t) + '" onclick="event.stopPropagation();filterByTag(\'' + escapeHtml(t).replace(/'/g, "\\'") + '\')">' +
       escapeHtml(t) +
-      '<span class="remove-tag" onclick="removeTag(\'' + escapeHtml(t).replace(/'/g, "\\'") + '\')">&times;</span>' +
+      '<span class="remove-tag" onclick="event.stopPropagation();removeTag(\'' + escapeHtml(t).replace(/'/g, "\\'") + '\')">&times;</span>' +
     '</span>'
   ).join('');
   renderExistingTags();
@@ -265,7 +474,7 @@ function renderTags(tags) {
 
 function addTag() {
   let input = document.getElementById('tagInput');
-  let tag = input.value.trim();
+  let tag = input.value.trim().replace(/^#+/, '');
   if (!tag) return;
   let current = getCurrentTags();
   if (current.includes(tag)) {
@@ -319,7 +528,10 @@ function clearForm() {
   renderTags([]);
   document.getElementById('cancelBtn').style.display = 'none';
   document.getElementById('saveBtn').innerHTML = '<i class="fas fa-save"></i> 保存';
+  document.getElementById('editorTitle').textContent = '编辑笔记';
   document.getElementById('noteTitle').focus();
+  updateSaveStatus('saved');
+  localStorage.removeItem('daily_notes_draft');
 }
 
 function showAuthError(msg) {
@@ -369,7 +581,7 @@ async function handleAuth() {
     } else {
       let { error } = await supabaseClient.auth.signUp({ email, password });
       if (error) throw error;
-      showToast('注册成功', 'success');
+      showToast('注册成功，请查看邮箱确认', 'success');
     }
   } catch (e) {
     showAuthError(e.message);
@@ -385,6 +597,7 @@ function showApp(email) {
   document.getElementById('loginPage').style.display = 'none';
   document.getElementById('appContent').style.display = 'block';
   if (email) document.getElementById('userEmail').textContent = email;
+  if (isDarkMode) applyDarkMode();
 }
 
 function showLogin() {
@@ -394,7 +607,8 @@ function showLogin() {
   currentNoteId = null;
   document.getElementById('notesList').innerHTML = '';
   document.getElementById('searchInput').value = '';
-  localStorage.removeItem('daily_notes_backup');
+  localStorage.removeItem('daily_notes_draft');
+  if (isFocusMode) toggleFocusMode();
   if (quill) clearForm();
 }
 
@@ -403,7 +617,118 @@ async function signOut() {
   if (error) showToast('退出失败：' + error.message, 'error');
 }
 
+/* ---- Dark Mode ---- */
+function applyDarkMode() {
+  document.documentElement.setAttribute('data-theme', 'dark');
+  document.getElementById('darkModeBtn').innerHTML = '<i class="fas fa-sun"></i>';
+}
+function applyLightMode() {
+  document.documentElement.removeAttribute('data-theme');
+  document.getElementById('darkModeBtn').innerHTML = '<i class="fas fa-moon"></i>';
+}
+function toggleDarkMode() {
+  isDarkMode = !isDarkMode;
+  localStorage.setItem('daily_notes_dark_mode', isDarkMode);
+  if (isDarkMode) applyDarkMode(); else applyLightMode();
+}
+
+/* ---- Focus Mode ---- */
+function toggleFocusMode() {
+  isFocusMode = !isFocusMode;
+  document.body.classList.toggle('focus-mode', isFocusMode);
+  document.getElementById('focusModeBtn').innerHTML = isFocusMode ? '<i class="fas fa-compress"></i>' : '<i class="fas fa-expand"></i>';
+  if (isFocusMode) {
+    document.getElementById('editorTitle').textContent = '专注写作';
+    document.getElementById('noteTitle').focus();
+  } else {
+    document.getElementById('editorTitle').textContent = currentNoteId ? '编辑笔记' : '编辑笔记';
+  }
+}
+
+/* ---- Save Status ---- */
+function updateSaveStatus(type, msg) {
+  let el = document.getElementById('saveStatus');
+  if (type === 'saving') {
+    el.className = 'save-status saving';
+    el.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 保存中...';
+  } else if (type === 'saved') {
+    el.className = 'save-status saved';
+    el.innerHTML = '<i class="fas fa-check-circle"></i> 已保存';
+  } else if (type === 'unsaved') {
+    el.className = 'save-status saving';
+    el.innerHTML = '<i class="fas fa-pen"></i> 未保存';
+  } else if (type === 'error') {
+    el.className = 'save-status error';
+    el.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + (msg || '保存失败');
+  }
+}
+
+/* ---- Auto-save draft ---- */
+function autoSaveDraft() {
+  let draft = {
+    date: document.getElementById('noteDate').value,
+    title: document.getElementById('noteTitle').value,
+    content: quill ? quill.root.innerHTML : '',
+    tags: getCurrentTags(),
+    noteId: currentNoteId
+  };
+  localStorage.setItem('daily_notes_draft', JSON.stringify(draft));
+  updateSaveStatus('unsaved');
+}
+
+function loadDraft() {
+  try {
+    let data = localStorage.getItem('daily_notes_draft');
+    if (!data) return;
+    let draft = JSON.parse(data);
+    if (draft.noteId === currentNoteId) return;
+    if (!draft.content || draft.content === '<p><br></p>') return;
+    if (draft.content && draft.content !== '<p><br></p>') {
+      document.getElementById('noteDate').value = draft.date || new Date().toISOString().slice(0, 10);
+      document.getElementById('noteTitle').value = draft.title || '';
+      if (quill) quill.root.innerHTML = draft.content;
+      renderTags(draft.tags || []);
+      currentNoteId = draft.noteId || null;
+      if (currentNoteId) {
+        document.getElementById('cancelBtn').style.display = 'block';
+        document.getElementById('saveBtn').innerHTML = '<i class="fas fa-save"></i> 更新';
+        document.getElementById('editorTitle').textContent = '编辑笔记';
+      }
+      updateSaveStatus('unsaved');
+      showToast('已恢复未保存的草稿', 'info');
+    }
+  } catch (e) {}
+}
+
+/* ---- Dropdown ---- */
+function toggleDropdown() {
+  document.getElementById('dropdownMenu').classList.toggle('show');
+}
+document.addEventListener('click', function(e) {
+  let dd = document.getElementById('moreDropdown');
+  if (!dd.contains(e.target)) {
+    document.getElementById('dropdownMenu').classList.remove('show');
+  }
+});
+
+/* ---- Modal ---- */
+function showModal(title, text, confirmText, callback) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalText').textContent = text;
+  document.getElementById('modalConfirmBtn').textContent = confirmText || '确定';
+  document.getElementById('confirmModal').classList.add('show');
+  confirmCallback = callback;
+}
+function closeModal() {
+  document.getElementById('confirmModal').classList.remove('show');
+  if (confirmCallback) { confirmCallback(); confirmCallback = null; }
+}
+
+/* ---- Save ---- */
+let saveLock = false;
+
 async function saveNote() {
+  if (saveLock) return;
   let date = document.getElementById('noteDate').value;
   let title = document.getElementById('noteTitle').value.trim();
   let content = quill.root.innerHTML;
@@ -415,8 +740,10 @@ async function saveNote() {
   if (!title) title = '无标题';
   let tags = getCurrentTags();
   let btn = document.getElementById('saveBtn');
+  saveLock = true;
   btn.disabled = true;
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 保存中...';
+  updateSaveStatus('saving');
   try {
     if (currentNoteId) {
       let { error } = await supabaseClient
@@ -434,31 +761,99 @@ async function saveNote() {
       currentNoteId = data[0].id;
     }
     showToast('保存成功', 'success');
-    btn.innerHTML = '<i class="fas fa-save"></i> 保存';
-    btn.disabled = false;
+    updateSaveStatus('saved');
     document.getElementById('saveBtn').innerHTML = '<i class="fas fa-save"></i> 保存';
-    document.getElementById('cancelBtn').style.display = currentNoteId ? 'block' : 'none';
+    document.getElementById('cancelBtn').style.display = 'block';
+    document.getElementById('editorTitle').textContent = '编辑笔记';
+    localStorage.removeItem('daily_notes_draft');
     await loadNotes();
   } catch (e) {
     showToast('保存失败：' + e.message, 'error');
-    btn.innerHTML = '<i class="fas fa-save"></i> 保存';
+    updateSaveStatus('error', e.message);
+    document.getElementById('saveBtn').innerHTML = '<i class="fas fa-save"></i> 保存';
+  } finally {
     btn.disabled = false;
+    saveLock = false;
   }
 }
 
-async function deleteNote(id) {
-  if (!confirm('确定要删除此笔记吗？')) return;
+/* ---- Pin / Unpin ---- */
+async function togglePin(id, event) {
+  if (event) event.stopPropagation();
+  let note = notesCache.find(n => n.id === id);
+  if (!note) return;
+  let newVal = !note.pinned;
   try {
-    let { error } = await supabaseClient.from('daily_notes').delete().eq('id', id);
+    let { error } = await supabaseClient
+      .from('daily_notes')
+      .update({ pinned: newVal })
+      .eq('id', id);
     if (error) throw error;
-    showToast('删除成功', 'success');
-    if (currentNoteId === id) clearForm();
+    note.pinned = newVal;
+    showToast(newVal ? '已置顶' : '已取消置顶', 'success');
     await loadNotes();
   } catch (e) {
-    showToast('删除失败：' + e.message, 'error');
+    showToast('操作失败：' + e.message, 'error');
   }
 }
 
+/* ---- Archive / Restore ---- */
+async function archiveNote(id, event) {
+  if (event) event.stopPropagation();
+  showModal('归档笔记', '确定将这篇笔记归档吗？归档后可在"归档"标签查看。', '归档', async function() {
+    confirmCallback = null;
+    try {
+      let { error } = await supabaseClient
+        .from('daily_notes')
+        .update({ archived: true })
+        .eq('id', id);
+      if (error) throw error;
+      showToast('已归档', 'success');
+      if (currentNoteId === id) clearForm();
+      await loadNotes();
+    } catch (e) {
+      showToast('归档失败：' + e.message, 'error');
+    }
+  });
+}
+
+async function restoreNote(id, event) {
+  if (event) event.stopPropagation();
+  try {
+    let { error } = await supabaseClient
+      .from('daily_notes')
+      .update({ archived: false })
+      .eq('id', id);
+    if (error) throw error;
+    showToast('已恢复', 'success');
+    await loadNotes();
+  } catch (e) {
+    showToast('恢复失败：' + e.message, 'error');
+  }
+}
+
+async function deleteNotePermanently(id, event) {
+  if (event) event.stopPropagation();
+  showModal('永久删除', '确定要永久删除这篇笔记吗？此操作不可恢复！', '永久删除', async function() {
+    confirmCallback = null;
+    try {
+      let { error } = await supabaseClient.from('daily_notes').delete().eq('id', id);
+      if (error) throw error;
+      showToast('已永久删除', 'success');
+      if (currentNoteId === id) clearForm();
+      await loadNotes();
+    } catch (e) {
+      showToast('删除失败：' + e.message, 'error');
+    }
+  });
+}
+
+async function deleteNote(id, event) {
+  if (event) event.stopPropagation();
+  archiveNote(id);
+}
+
+/* ---- Edit ---- */
 function editNote(id) {
   let note = notesCache.find(n => n.id === id);
   if (!note) return;
@@ -469,14 +864,62 @@ function editNote(id) {
   renderTags(note.tags || []);
   document.getElementById('cancelBtn').style.display = 'block';
   document.getElementById('saveBtn').innerHTML = '<i class="fas fa-save"></i> 更新';
+  document.getElementById('editorTitle').textContent = '编辑笔记';
   document.getElementById('noteTitle').focus();
   window.scrollTo({ top: 0, behavior: 'smooth' });
+  updateSaveStatus('saved');
+  localStorage.removeItem('daily_notes_draft');
 }
 
+/* ---- Export ---- */
+function exportNote(note) {
+  let title = note.title || '无标题';
+  let date = note.date;
+  let content = stripHtml(note.content || '');
+  let tags = (note.tags || []).map(t => '#' + t).join(' ');
+  let md = '# ' + title + '\n\n日期：' + date + '\n标签：' + (tags || '无') + '\n\n---\n\n' + content;
+  let blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+  let url = URL.createObjectURL(blob);
+  let a = document.createElement('a');
+  a.href = url;
+  a.download = title + '_' + date + '.md';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('已导出', 'success');
+}
+
+function exportAllNotes() {
+  document.getElementById('dropdownMenu').classList.remove('show');
+  if (!notesCache.length) {
+    showToast('没有笔记可导出', 'warning');
+    return;
+  }
+  let md = '# 笔记导出\n\n导出时间：' + new Date().toLocaleString() + '\n共 ' + notesCache.length + ' 篇笔记\n\n---\n\n';
+  notesCache.forEach((note, i) => {
+    let title = note.title || '无标题';
+    let date = note.date;
+    let content = stripHtml(note.content || '');
+    let tags = (note.tags || []).map(t => '#' + t).join(' ');
+    md += '## ' + title + '\n\n日期：' + date + '\n标签：' + (tags || '无') + '\n\n' + content + '\n\n---\n\n';
+  });
+  let blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+  let url = URL.createObjectURL(blob);
+  let a = document.createElement('a');
+  a.href = url;
+  a.download = 'notes_export_' + new Date().toISOString().slice(0, 10) + '.md';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('已导出全部笔记 (' + notesCache.length + ' 篇)', 'success');
+}
+
+/* ---- Render ---- */
 function renderNotes(records) {
   let container = document.getElementById('notesList');
   if (!records || records.length === 0) {
-    container.innerHTML = '<div class="empty"><i class="far fa-sticky-note"></i>暂无笔记<div class="empty"><p>开始记录你的第一篇笔记吧</p></div></div>';
+    let msg = currentTab === 'pinned' ? '还没有置顶的笔记' : currentTab === 'archived' ? '没有归档的笔记' : '暂无笔记';
+    let sub = currentTab === 'active' ? '开始记录你的第一篇笔记吧' : '';
+    container.innerHTML = '<div class="empty"><i class="far fa-sticky-note"></i>' + msg + '<div class="empty"><p>' + sub + '</p></div></div>';
+    updateStats([]);
     return;
   }
   let html = '';
@@ -484,55 +927,103 @@ function renderNotes(records) {
   records.forEach(note => {
     if (note.date !== currentDate) {
       currentDate = note.date;
-      html += '<div class="date-separator"><i class="far fa-calendar-alt"></i> ' + fmtDate(note.date) + '</div>';
+      let pinnedCount = records.filter(n => n.date === currentDate && n.pinned).length;
+      html += '<div class="date-separator"><span><i class="far fa-calendar-alt"></i> ' + fmtDate(note.date) + '</span>' +
+        (pinnedCount > 0 ? '<span style="font-size:11px;color:var(--pin-color);"><i class="fas fa-thumbtack"></i> ' + pinnedCount + '</span>' : '') +
+        '</div>';
     }
     let plainText = stripHtml(note.content);
     let snippet = plainText.substring(0, 150);
     if (plainText.length > 150) snippet += '...';
+    let trimmed = snippet.trim();
     let tagsHtml = (note.tags || []).map(t =>
-      '<span class="tag-badge">' + escapeHtml(t) + '</span>'
+      '<span class="tag-badge" onclick="event.stopPropagation();filterByTag(\'' + escapeHtml(t).replace(/'/g, "\\'") + '\')">' + escapeHtml(t) + '</span>'
     ).join('');
+    let isPinned = note.pinned;
+    let isArchived = note.archived;
+    let readingTime = Math.max(1, Math.ceil(plainText.length / 500));
+    let itemClass = 'note-item' + (isArchived ? ' note-item-archived' : '');
     html +=
-      '<div class="note-item" onclick="editNote(\'' + note.id + '\')">' +
+      '<div class="' + itemClass + '" onclick="editNote(\'' + note.id + '\')">' +
         '<div class="note-item-header">' +
-          '<span class="note-item-title">' + escapeHtml(note.title || '无标题') + '</span>' +
+          '<span class="note-item-title">' +
+            (isPinned ? '<span class="pin-icon"><i class="fas fa-thumbtack"></i></span> ' : '') +
+            escapeHtml(note.title || '无标题') +
+          '</span>' +
           '<div class="note-item-meta">' +
-            '<span class="note-item-date">' + note.date.slice(5) + '</span>' +
+            '<span class="note-item-date">' + note.date.slice(5) + ' · ' + readingTime + '分钟</span>' +
             '<span class="note-item-actions">' +
-              '<button class="btn-icon btn-icon-danger" onclick="event.stopPropagation();deleteNote(\'' + note.id + '\')" title="删除"><i class="fas fa-trash-alt"></i></button>' +
+              '<button class="btn-icon btn-icon-pin' + (isPinned ? ' active' : '') + '" onclick="togglePin(\'' + note.id + '\', event)" title="' + (isPinned ? '取消置顶' : '置顶') + '"><i class="fas fa-thumbtack"></i></button>' +
+              (isArchived
+                ? '<button class="btn-icon" onclick="restoreNote(\'' + note.id + '\', event)" title="恢复"><i class="fas fa-undo-alt"></i></button>' +
+                  '<button class="btn-icon btn-icon-danger" onclick="deleteNotePermanently(\'' + note.id + '\', event)" title="永久删除"><i class="fas fa-trash-alt"></i></button>'
+                : '<button class="btn-icon" onclick="exportNote(notesCache.find(n=>n.id===\'' + note.id + '\'))" title="导出"><i class="fas fa-download"></i></button>' +
+                  '<button class="btn-icon" onclick="archiveNote(\'' + note.id + '\', event)" title="归档"><i class="fas fa-archive"></i></button>'
+              ) +
             '</span>' +
           '</div>' +
         '</div>' +
-        (snippet ? '<div class="note-item-snippet">' + escapeHtml(snippet) + '</div>' : '') +
+        (trimmed ? '<div class="note-item-snippet">' + escapeHtml(trimmed) + '</div>' : '') +
         (tagsHtml ? '<div class="note-item-tags">' + tagsHtml + '</div>' : '') +
       '</div>';
   });
   container.innerHTML = html;
+  updateStats(records);
 }
 
-function backupToLocal(data) {
-  try { localStorage.setItem('daily_notes_backup', JSON.stringify(data)); } catch (e) {}
-}
-
-function loadFromLocal() {
-  try {
-    let data = localStorage.getItem('daily_notes_backup');
-    return data ? JSON.parse(data) : null;
-  } catch (e) { return null; }
-}
-
-function performFilter(keyword) {
-  if (!keyword) {
-    renderNotes(notesCache);
-    return;
+/* ---- Stats ---- */
+function updateStats(records) {
+  let allNotes = notesCache.filter(n => !n.archived);
+  let visible = records || allNotes;
+  document.getElementById('statNotes').textContent = allNotes.length;
+  let totalWords = 0;
+  allNotes.forEach(n => totalWords += stripHtml(n.content || '').length);
+  document.getElementById('statWords').textContent = totalWords;
+  let allTags = new Set();
+  allNotes.forEach(n => (n.tags || []).forEach(t => allTags.add(t)));
+  document.getElementById('statTags').textContent = allTags.size;
+  // Streak: count consecutive days with notes
+  let days = [...new Set(allNotes.map(n => n.date))].sort().reverse();
+  let streak = 0;
+  if (days.length > 0) {
+    let today = new Date().toISOString().slice(0, 10);
+    let checkDate = new Date(today + 'T00:00:00');
+    for (let i = 0; i < days.length; i++) {
+      let d = new Date(days[i] + 'T00:00:00');
+      let diff = Math.round((checkDate - d) / 86400000);
+      if (diff === streak) { streak++; } else break;
+    }
   }
-  let kw = keyword.toLowerCase();
-  let filtered = notesCache.filter(n => {
-    let title = (n.title || '').toLowerCase();
-    let content = stripHtml(n.content || '').toLowerCase();
-    return title.includes(kw) || content.includes(kw);
-  });
-  renderNotes(filtered);
+  document.getElementById('statStreak').textContent = streak;
+  document.getElementById('noteCount').innerHTML = '<i class="far fa-file-alt"></i> ' + allNotes.length;
+}
+
+/* ---- Tabs ---- */
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
+  document.querySelector('.tab-item[data-tab="' + tab + '"]').classList.add('active');
+  applyFilters();
+}
+
+/* ---- Tag filter ---- */
+function filterByTag(tag) {
+  tagFilter = tag;
+  document.getElementById('activeFilter').style.display = 'flex';
+  document.getElementById('filterTagName').textContent = tag;
+  applyFilters();
+}
+
+function clearTagFilter() {
+  tagFilter = null;
+  document.getElementById('activeFilter').style.display = 'none';
+  applyFilters();
+}
+
+/* ---- Search ---- */
+function performFilter(keyword) {
+  searchKeyword = keyword;
+  applyFilters();
 }
 
 let searchTimer = null;
@@ -545,6 +1036,58 @@ function filterNotes() {
   }, 200);
 }
 
+/* ---- Apply all filters ---- */
+function applyFilters() {
+  let filtered = [...notesCache];
+  // Filter by tab
+  if (currentTab === 'active') {
+    filtered = filtered.filter(n => !n.archived);
+  } else if (currentTab === 'pinned') {
+    filtered = filtered.filter(n => n.pinned && !n.archived);
+  } else if (currentTab === 'archived') {
+    filtered = filtered.filter(n => n.archived);
+  }
+  // Filter by tag
+  if (tagFilter) {
+    filtered = filtered.filter(n => (n.tags || []).includes(tagFilter));
+  }
+  // Filter by search keyword
+  if (searchKeyword) {
+    let kw = searchKeyword.toLowerCase();
+    let isTagSearch = kw.startsWith('#');
+    if (isTagSearch) {
+      let tagKw = kw.slice(1);
+      filtered = filtered.filter(n => (n.tags || []).some(t => t.toLowerCase().includes(tagKw)));
+    } else {
+      filtered = filtered.filter(n => {
+        let title = (n.title || '').toLowerCase();
+        let content = stripHtml(n.content || '').toLowerCase();
+        return title.includes(kw) || content.includes(kw);
+      });
+    }
+  }
+  // Sort: pinned first, then by date desc
+  filtered.sort((a, b) => {
+    if (a.pinned && !b.pinned) return -1;
+    if (!a.pinned && b.pinned) return 1;
+    return b.date.localeCompare(a.date) || new Date(b.created_at || 0) - new Date(a.created_at || 0);
+  });
+  renderNotes(filtered);
+}
+
+/* ---- Backup ---- */
+function backupToLocal(data) {
+  try { localStorage.setItem('daily_notes_backup', JSON.stringify(data)); } catch (e) {}
+}
+
+function loadFromLocal() {
+  try {
+    let data = localStorage.getItem('daily_notes_backup');
+    return data ? JSON.parse(data) : null;
+  } catch (e) { return null; }
+}
+
+/* ---- Load ---- */
 async function loadNotes() {
   try {
     let { data, error } = await supabaseClient
@@ -564,15 +1107,41 @@ async function loadNotes() {
       showToast('无法加载数据', 'error');
     }
   }
-  let keyword = document.getElementById('searchInput').value.trim();
-  if (keyword) {
-    performFilter(keyword);
-  } else {
-    renderNotes(notesCache);
-  }
+  applyFilters();
   renderExistingTags();
 }
 
+/* ---- Show archived notes (shortcut) ---- */
+function showArchivedNotes() {
+  document.getElementById('dropdownMenu').classList.remove('show');
+  switchTab('archived');
+}
+
+/* ---- Image paste handler ---- */
+function handleImagePaste(e) {
+  let items = (e.clipboardData || e.originalEvent.clipboardData).items;
+  for (let item of items) {
+    if (item.type.indexOf('image') === 0) {
+      e.preventDefault();
+      let blob = item.getAsFile();
+      let reader = new FileReader();
+      reader.onload = function(ev) {
+        let img = '<img src="' + ev.target.result + '" alt="粘贴图片" style="max-width:100%;" />';
+        let range = quill.getSelection();
+        if (range) {
+          quill.clipboard.dangerouslyPasteHTML(range.index, img);
+        } else {
+          quill.clipboard.dangerouslyPasteHTML(quill.getLength(), img);
+        }
+        autoSaveDraft();
+      };
+      reader.readAsDataURL(blob);
+      return;
+    }
+  }
+}
+
+/* ---- Init ---- */
 document.getElementById('tagInput').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') { e.preventDefault(); addTag(); }
 });
@@ -589,9 +1158,18 @@ document.addEventListener('keydown', function(e) {
     e.preventDefault();
     saveNote();
   }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    e.preventDefault();
+    saveNote();
+  }
+  if (e.key === 'Escape' && isFocusMode) {
+    toggleFocusMode();
+  }
 });
 
 document.addEventListener('DOMContentLoaded', async function() {
+  if (isDarkMode) applyDarkMode();
+
   supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   let { data: { session } } = await supabaseClient.auth.getSession();
@@ -604,9 +1182,12 @@ document.addEventListener('DOMContentLoaded', async function() {
         toolbar: [
           [{ 'header': [1, 2, 3, false] }],
           ['bold', 'italic', 'underline', 'strike'],
-          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+          [{ 'list': 'ordered'}, { 'list': 'bullet' }, { 'list': 'check' }],
           ['blockquote', 'code-block'],
-          ['link'],
+          [{ 'script': 'sub'}, { 'script': 'super' }],
+          [{ 'indent': '-1'}, { 'indent': '+1' }],
+          [{ 'color': [] }, { 'background': [] }],
+          ['link', 'image'],
           ['clean']
         ]
       }
@@ -614,6 +1195,15 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('noteDate').value = new Date().toISOString().slice(0, 10);
     showApp(session.user.email);
     loadNotes();
+    // Auto-save draft on content change
+    quill.on('text-change', function() {
+      autoSaveDraft();
+    });
+    document.getElementById('noteTitle').addEventListener('input', autoSaveDraft);
+    // Image paste
+    document.getElementById('editorContainer').addEventListener('paste', handleImagePaste);
+    // Load draft
+    loadDraft();
   } else {
     showLogin();
   }
@@ -628,14 +1218,23 @@ document.addEventListener('DOMContentLoaded', async function() {
             toolbar: [
               [{ 'header': [1, 2, 3, false] }],
               ['bold', 'italic', 'underline', 'strike'],
-              [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+              [{ 'list': 'ordered'}, { 'list': 'bullet' }, { 'list': 'check' }],
               ['blockquote', 'code-block'],
-              ['link'],
+              [{ 'script': 'sub'}, { 'script': 'super' }],
+              [{ 'indent': '-1'}, { 'indent': '+1' }],
+              [{ 'color': [] }, { 'background': [] }],
+              ['link', 'image'],
               ['clean']
             ]
           }
         });
         document.getElementById('noteDate').value = new Date().toISOString().slice(0, 10);
+        quill.on('text-change', function() {
+          autoSaveDraft();
+        });
+        document.getElementById('noteTitle').addEventListener('input', autoSaveDraft);
+        document.getElementById('editorContainer').addEventListener('paste', handleImagePaste);
+        loadDraft();
       }
       showApp(session.user.email);
       loadNotes();
