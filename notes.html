@@ -3,445 +3,403 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>每日笔记</title>
+<title>Notes</title>
 <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
 :root {
-  --bg: #f5f5f7;
-  --surface: #fff;
-  --text: #1d1d1f;
-  --text-secondary: #86868b;
-  --text-muted: #aeaeb2;
-  --border: #d2d2d7;
-  --border-light: #e5e5ea;
-  --primary: #007aff;
-  --primary-hover: #0066d6;
-  --primary-light: #e8f0fe;
-  --primary-text: #007aff;
-  --danger: #ff3b30;
-  --danger-bg: #ffe8e8;
-  --success: #34c759;
-  --warning: #ff9500;
-  --toolbar-bg: #f8f8fa;
-  --input-bg: #f8f8fa;
-  --shadow: rgba(0,0,0,.04);
-  --shadow-lg: rgba(0,0,0,.1);
-  --tab-height: 52px;
-  --header-height: 48px;
-  --radius: 14px;
-  --radius-sm: 10px;
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --bg: #f0f2f5; --surface: #fff; --surface2: #f7f8fa;
+  --text: #1a1a2e; --text2: #5a5a7a; --text3: #9a9ab0;
+  --border: #e4e6eb; --border2: #d0d2d8;
+  --primary: #5b5bd7; --primary-hover: #4a4ac2; --primary-light: #eeedfc; --primary-text: #5b5bd7;
+  --accent: #f59e0b; --accent-light: #fef3c7;
+  --danger: #ef4444; --danger-light: #fef2f2;
+  --success: #10b981; --success-light: #d1fae5;
+  --shadow: 0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-lg: 0 10px 40px rgba(0,0,0,.12);
+  --radius: 10px; --radius-sm: 6px;
+  --sidebar-w: 220px; --list-w: 320px;
+  --nav-h: 48px;
+  --font: -apple-system, "SF Pro Display", "Microsoft YaHei", sans-serif;
+  --transition: .2s cubic-bezier(.4,0,.2,1);
 }
-[data-theme="dark"] {
-  --bg: #000;
-  --surface: #1c1c1e;
-  --text: #f5f5f7;
-  --text-secondary: #98989d;
-  --text-muted: #636366;
-  --border: #38383a;
-  --border-light: #2c2c2e;
-  --primary: #0a84ff;
-  --primary-hover: #409cff;
-  --primary-light: #1a2a3f;
-  --primary-text: #0a84ff;
-  --danger: #ff453a;
-  --danger-bg: #3a1a1a;
-  --success: #30d158;
-  --warning: #ff9f0a;
-  --toolbar-bg: #1c1c1e;
-  --input-bg: #2c2c2e;
-  --shadow: rgba(0,0,0,.2);
-  --shadow-lg: rgba(0,0,0,.4);
+[data-theme=dark] {
+  --bg: #0d1117; --surface: #161b22; --surface2: #1c2333;
+  --text: #e6edf3; --text2: #8b949e; --text3: #484f58;
+  --border: #30363d; --border2: #21262d;
+  --primary: #7c7cf0; --primary-hover: #6e6ee0; --primary-light: #1c1c3a; --primary-text: #a5a5ff;
+  --accent: #fbbf24; --accent-light: #2a2410;
+  --danger: #f87171; --danger-light: #2d1515;
+  --success: #34d399; --success-light: #0c2a1e;
+  --shadow: 0 1px 3px rgba(0,0,0,.3),0 1px 2px rgba(0,0,0,.2);
+  --shadow-lg: 0 10px 40px rgba(0,0,0,.5);
 }
-* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow: hidden; transition: background .3s, color .3s; }
-input, textarea, button { font-family: inherit; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html,body { height: 100%; overflow: hidden; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); transition: background .3s,color .3s; }
 ::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 2px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+button { font-family: inherit; }
+a { color: var(--primary); text-decoration: none; }
+input,textarea { font-family: inherit; }
 
-/* ==================== Layout ==================== */
-#appContent { display: none; height: 100vh; height: 100dvh; flex-direction: column; position: relative; }
-.tab-pages { flex: 1; overflow: hidden; position: relative; }
-.tab-page { display: none; height: 100%; overflow-y: auto; padding: 0 16px calc(var(--tab-height) + var(--safe-bottom) + 8px); -webkit-overflow-scrolling: touch; }
-.tab-page.active { display: block; }
-
-/* ==================== Bottom Tab Bar ==================== */
-.bottom-tabs { position: fixed; bottom: 0; left: 0; right: 0; height: calc(var(--tab-height) + var(--safe-bottom)); padding-bottom: var(--safe-bottom); background: var(--surface); border-top: 1px solid var(--border-light); display: flex; z-index: 100; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
-.tab-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border: none; background: none; color: var(--text-muted); font-size: 10px; cursor: pointer; transition: color .2s; padding: 4px 0; }
-.tab-btn i { font-size: 20px; transition: transform .2s; }
-.tab-btn.active { color: var(--primary); }
-.tab-btn.active i { transform: scale(1.05); }
-.tab-btn:active i { transform: scale(0.9); }
-
-/* ==================== Header ==================== */
-.page-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 0 8px; position: sticky; top: 0; background: var(--bg); z-index: 10; }
-.page-header h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
-.page-header-actions { display: flex; gap: 6px; }
-.header-btn { width: 36px; height: 36px; border-radius: 50%; border: none; background: var(--input-bg); color: var(--text); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .2s; }
-.header-btn:active { transform: scale(0.9); }
-.header-btn.avatar { font-size: 14px; font-weight: 600; color: var(--primary); }
-
-/* ==================== Note Timeline ==================== */
-.date-group { margin-bottom: 20px; }
-.date-label { font-size: 14px; font-weight: 600; color: var(--text-secondary); padding: 8px 4px 6px; display: flex; align-items: center; gap: 6px; }
-.date-label .count { font-weight: 400; color: var(--text-muted); font-size: 12px; }
-.note-card { background: var(--surface); border-radius: var(--radius); padding: 16px; margin-bottom: 10px; box-shadow: 0 1px 3px var(--shadow); cursor: pointer; transition: all .2s; position: relative; overflow: hidden; border: 1px solid var(--border-light); }
-.note-card:active { transform: scale(0.98); opacity: 0.9; }
-.note-card.archived { opacity: 0.6; }
-.note-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
-.note-card-title { font-size: 16px; font-weight: 600; line-height: 1.4; flex: 1; display: flex; align-items: center; gap: 6px; color: var(--text); }
-.note-card-time { font-size: 12px; color: var(--text-muted); white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
-.note-card-snippet { font-size: 14px; color: var(--text-secondary); line-height: 1.5; margin-top: 6px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
-.note-card-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
-.note-card-tags .tag { font-size: 11px; padding: 2px 8px; border-radius: 12px; background: var(--primary-light); color: var(--primary-text); cursor: pointer; transition: opacity .2s; }
-.note-card-tags .tag:active { opacity: 0.6; }
-.note-card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border-light); }
-.note-card-actions { display: flex; gap: 2px; }
-.note-card-action { width: 30px; height: 30px; border-radius: 8px; border: none; background: none; color: var(--text-muted); font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; }
-.note-card-action:active { background: var(--input-bg); color: var(--text-secondary); }
-.note-card-action.pin.active { color: var(--warning); }
-.note-card-action.danger:active { color: var(--danger); }
-.pin-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; color: var(--warning); background: rgba(255,159,10,.12); padding: 2px 6px; border-radius: 4px; font-weight: 500; }
-.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; color: var(--text-muted); text-align: center; }
-.empty-state i { font-size: 48px; margin-bottom: 16px; color: var(--border); }
-.empty-state p { font-size: 14px; margin-top: 4px; }
-
-/* ==================== FAB ==================== */
-.fab { position: fixed; bottom: calc(var(--tab-height) + var(--safe-bottom) + 20px); right: 20px; width: 56px; height: 56px; border-radius: 50%; background: var(--primary); color: #fff; border: none; font-size: 24px; cursor: pointer; box-shadow: 0 4px 16px rgba(0,122,255,.35); display: flex; align-items: center; justify-content: center; transition: all .25s; z-index: 50; }
-.fab:active { transform: scale(0.9); box-shadow: 0 2px 8px rgba(0,122,255,.25); }
-
-/* ==================== Search Page ==================== */
-.search-box { display: flex; align-items: center; gap: 8px; background: var(--input-bg); border-radius: var(--radius-sm); padding: 0 12px; margin: 8px 0 12px; border: 2px solid transparent; transition: border .2s; }
-.search-box:focus-within { border-color: var(--primary); }
-.search-box i { color: var(--text-muted); font-size: 16px; }
-.search-box input { flex: 1; padding: 12px 0; border: none; background: none; font-size: 16px; outline: none; color: var(--text); }
-.search-box .clear-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; font-size: 14px; display: none; }
-.search-box .clear-btn.visible { display: block; }
-.filter-chips { display: flex; gap: 6px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
-.filter-chip { padding: 6px 14px; border-radius: 16px; border: 1px solid var(--border); background: var(--surface); font-size: 13px; color: var(--text-secondary); cursor: pointer; white-space: nowrap; transition: all .2s; flex-shrink: 0; }
-.filter-chip:active { transform: scale(0.96); }
-.filter-chip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
-
-/* ==================== Tags Page ==================== */
-.tag-cloud { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 0; }
-.tag-cloud-item { padding: 8px 16px; border-radius: 20px; background: var(--surface); border: 1px solid var(--border-light); cursor: pointer; transition: all .2s; display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--text); box-shadow: 0 1px 2px var(--shadow); }
-.tag-cloud-item:active { transform: scale(0.96); }
-.tag-cloud-item i { color: var(--primary-text); font-size: 12px; }
-.tag-cloud-item .count { color: var(--text-muted); font-size: 12px; }
-.tag-notes-title { font-size: 16px; font-weight: 600; margin: 16px 0 8px; display: flex; align-items: center; gap: 6px; }
-.tag-notes-title .clear { font-size: 13px; font-weight: 400; color: var(--primary); cursor: pointer; }
-
-/* ==================== Profile Page ==================== */
-.profile-header { display: flex; align-items: center; gap: 16px; padding: 20px 0; }
-.profile-avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 600; }
-.profile-info h2 { font-size: 18px; font-weight: 600; }
-.profile-info p { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
-.profile-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px; }
-.stat-card { background: var(--surface); border-radius: var(--radius-sm); padding: 14px; text-align: center; box-shadow: 0 1px 2px var(--shadow); border: 1px solid var(--border-light); }
-.stat-card .num { font-size: 22px; font-weight: 700; color: var(--text); }
-.stat-card .label { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-.settings-group { background: var(--surface); border-radius: var(--radius); overflow: hidden; box-shadow: 0 1px 2px var(--shadow); border: 1px solid var(--border-light); margin-bottom: 16px; }
-.settings-item { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border-light); cursor: pointer; transition: background .15s; }
-.settings-item:last-child { border-bottom: none; }
-.settings-item:active { background: var(--input-bg); }
-.settings-item-left { display: flex; align-items: center; gap: 12px; }
-.settings-item-left i { width: 20px; color: var(--primary); font-size: 16px; }
-.settings-item-left span { font-size: 15px; }
-.settings-item .badge { font-size: 12px; color: var(--text-muted); }
-.toggle-switch { width: 48px; height: 30px; border-radius: 15px; background: var(--border); border: none; cursor: pointer; position: relative; transition: background .2s; padding: 0; }
-.toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 26px; height: 26px; border-radius: 50%; background: #fff; transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.15); }
-.toggle-switch.on { background: var(--success); }
-.toggle-switch.on::after { transform: translateX(18px); }
-
-/* ==================== Editor Panel ==================== */
-.editor-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.4); z-index: 200; opacity: 0; transition: opacity .3s; }
-.editor-overlay.show { display: block; opacity: 1; }
-.editor-panel { position: fixed; bottom: 0; left: 0; right: 0; max-height: 92vh; background: var(--surface); border-radius: var(--radius) var(--radius) 0 0; z-index: 201; transform: translateY(100%); transition: transform .35s cubic-bezier(.32,.72,0,1); display: flex; flex-direction: column; box-shadow: 0 -4px 24px var(--shadow-lg); }
-.editor-panel.show { transform: translateY(0); }
-.editor-handle { width: 36px; height: 4px; border-radius: 2px; background: var(--border); margin: 8px auto; flex-shrink: 0; }
-.editor-header { display: flex; align-items: center; justify-content: space-between; padding: 4px 16px 12px; flex-shrink: 0; }
-.editor-header-left { display: flex; align-items: center; gap: 8px; }
-.editor-back { width: 36px; height: 36px; border-radius: 50%; border: none; background: var(--input-bg); color: var(--text); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.editor-back:active { transform: scale(0.9); }
-.editor-header h2 { font-size: 17px; font-weight: 600; }
-.editor-save-btn { padding: 8px 20px; border-radius: 20px; border: none; background: var(--primary); color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; transition: all .2s; }
-.editor-save-btn:active { transform: scale(0.96); opacity: 0.8; }
-.editor-save-btn:disabled { opacity: 0.4; }
-.editor-body { flex: 1; overflow-y: auto; padding: 0 16px 20px; -webkit-overflow-scrolling: touch; }
-.editor-field { margin-bottom: 12px; }
-.editor-field label { font-size: 12px; color: var(--text-muted); font-weight: 500; margin-bottom: 4px; display: block; }
-.editor-field input[type="date"],
-.editor-field input[type="text"] { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 16px; outline: none; transition: border .2s; background: var(--input-bg); color: var(--text); }
-.editor-field input:focus { border-color: var(--primary); }
-#editorContainer { height: 220px; }
-.editor-field .ql-toolbar { border-radius: var(--radius-sm) var(--radius-sm) 0 0; border-color: var(--border); background: var(--toolbar-bg); }
-.editor-field .ql-container { border-radius: 0 0 var(--radius-sm) var(--radius-sm); border-color: var(--border); font-size: 15px; }
-.editor-field .ql-editor { min-height: 200px; }
-.editor-field .ql-editor { color: var(--text); }
-.editor-field .ql-editor.ql-blank::before { color: var(--text-muted); }
-.editor-field .ql-snow .ql-stroke { stroke: var(--text-secondary); }
-.editor-field .ql-snow .ql-fill { fill: var(--text-secondary); }
-.editor-field .ql-snow .ql-picker { color: var(--text-secondary); }
-.editor-field .ql-snow .ql-picker-options { background: var(--surface); border-color: var(--border); }
-.editor-field .ql-snow .ql-tooltip { background: var(--surface); border-color: var(--border); color: var(--text); }
-.editor-field .ql-snow .ql-tooltip input[type=text] { background: var(--input-bg); border-color: var(--border); color: var(--text); }
-.editor-field .ql-toolbar button:hover .ql-stroke,
-.editor-field .ql-toolbar button.ql-active .ql-stroke { stroke: var(--primary); }
-.editor-field .ql-toolbar button:hover .ql-fill,
-.editor-field .ql-toolbar button.ql-active .ql-fill { fill: var(--primary); }
-.editor-field .ql-toolbar .ql-picker-label:hover,
-.editor-field .ql-toolbar .ql-picker-label.ql-active { color: var(--primary); }
-.editor-field .ql-toolbar .ql-picker-item:hover { color: var(--primary); }
-
-/* Tag input in editor */
-.tag-editor { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--input-bg); min-height: 44px; align-items: center; cursor: text; }
-.tag-editor .tag-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; background: var(--primary-light); color: var(--primary-text); border-radius: 12px; font-size: 13px; font-weight: 500; }
-.tag-editor .tag-badge .remove { cursor: pointer; font-size: 10px; opacity: 0.5; margin-left: 2px; }
-.tag-editor .tag-badge .remove:hover { opacity: 1; }
-.tag-editor input { flex: 1; border: none; background: none; font-size: 15px; outline: none; color: var(--text); min-width: 80px; padding: 2px 0; }
-.existing-tags-bar { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
-.existing-tags-bar .preset-tag { padding: 2px 10px; border-radius: 12px; border: 1px solid var(--border); font-size: 12px; cursor: pointer; color: var(--text-muted); background: none; transition: all .15s; }
-.existing-tags-bar .preset-tag:active { background: var(--primary-light); border-color: var(--primary-light); color: var(--primary-text); }
-.existing-tags-bar .preset-tag.active { background: var(--primary-light); border-color: var(--primary-light); color: var(--primary-text); }
-.save-status { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
-.save-status.saving { color: var(--warning); }
-.save-status.saved { color: var(--success); }
-.save-status.error { color: var(--danger); }
-
-/* ==================== Auth Page ==================== */
-.auth-page { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg); z-index: 300; flex-direction: column; align-items: center; justify-content: center; padding: 24px; }
-.auth-page.show { display: flex; }
-.auth-box { width: 100%; max-width: 360px; }
-.auth-logo { text-align: center; margin-bottom: 32px; }
-.auth-logo i { font-size: 48px; color: var(--primary); }
-.auth-logo h1 { font-size: 24px; font-weight: 700; margin-top: 8px; }
-.auth-logo p { font-size: 14px; color: var(--text-secondary); margin-top: 4px; }
-.auth-field { margin-bottom: 14px; }
-.auth-field label { font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; display: block; }
-.auth-field input { width: 100%; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 16px; outline: none; transition: border .2s; background: var(--surface); color: var(--text); }
-.auth-field input:focus { border-color: var(--primary); }
-.auth-error { color: var(--danger); font-size: 13px; text-align: center; margin-bottom: 12px; display: none; padding: 10px; background: var(--danger-bg); border-radius: var(--radius-sm); }
-.auth-btn { width: 100%; padding: 14px; border-radius: var(--radius-sm); border: none; background: var(--primary); color: #fff; font-size: 16px; font-weight: 600; cursor: pointer; transition: all .2s; }
-.auth-btn:active { transform: scale(0.98); opacity: 0.8; }
-.auth-btn:disabled { opacity: 0.4; }
-.auth-footer { text-align: center; margin-top: 16px; font-size: 14px; color: var(--text-secondary); }
-.auth-footer a { color: var(--primary); cursor: pointer; }
-
-/* ==================== Confirm Modal ==================== */
-.modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.5); z-index: 500; align-items: center; justify-content: center; padding: 24px; }
-.modal-overlay.show { display: flex; }
-.modal-box { background: var(--surface); border-radius: var(--radius); padding: 24px; max-width: 320px; width: 100%; box-shadow: 0 8px 40px var(--shadow-lg); }
-.modal-title { font-size: 17px; font-weight: 600; margin-bottom: 4px; }
-.modal-text { font-size: 14px; color: var(--text-secondary); margin-bottom: 20px; }
-.modal-actions { display: flex; gap: 8px; }
-.modal-actions button { flex: 1; padding: 12px; border-radius: var(--radius-sm); border: none; font-size: 15px; font-weight: 500; cursor: pointer; transition: all .15s; }
-.modal-actions button:active { transform: scale(0.97); }
-.modal-btn-secondary { background: var(--input-bg); color: var(--text); }
-.modal-btn-danger { background: var(--danger); color: #fff; }
-
-/* ==================== Toast ==================== */
-.toast { position: fixed; top: 16px; left: 50%; transform: translateX(-50%) translateY(-100px); padding: 10px 20px; border-radius: 20px; color: #fff; font-size: 14px; z-index: 9999; opacity: 0; transition: all .35s cubic-bezier(.32,.72,0,1); pointer-events: none; font-weight: 500; box-shadow: 0 4px 16px rgba(0,0,0,.2); }
+/* ─── Toast ─── */
+.toast { position: fixed; top: 16px; left: 50%; transform: translateX(-50%) translateY(-80px); padding: 10px 20px; border-radius: var(--radius-sm); color: #fff; font-size: 13px; font-weight: 500; z-index: 99999; opacity: 0; transition: all .3s ease; pointer-events: none; box-shadow: var(--shadow-lg); }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 .toast.success { background: var(--success); }
 .toast.error { background: var(--danger); }
-.toast.warning { background: var(--warning); }
+.toast.warning { background: var(--accent); }
 .toast.info { background: var(--primary); }
 
-/* ==================== Tab filter in notes ==================== */
-.notes-tabs { display: flex; gap: 4px; margin-bottom: 12px; background: var(--input-bg); border-radius: var(--radius-sm); padding: 3px; }
-.notes-tab { flex: 1; padding: 8px; text-align: center; border: none; background: none; border-radius: 8px; font-size: 13px; font-weight: 500; color: var(--text-muted); cursor: pointer; transition: all .2s; }
-.notes-tab.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px var(--shadow); }
-.notes-tab:active { opacity: 0.7; }
+/* ─── Login ─── */
+#loginPage { position: fixed; inset: 0; display: none; justify-content: center; align-items: center; background: var(--bg); z-index: 100; }
+#loginPage.show { display: flex; }
+.login-card { width: 380px; padding: 40px 32px 32px; background: var(--surface); border-radius: 16px; box-shadow: var(--shadow-lg); }
+.login-card h1 { font-size: 22px; text-align: center; margin-bottom: 4px; }
+.login-card .sub { text-align: center; color: var(--text2); font-size: 13px; margin-bottom: 28px; }
+.login-card .fg { margin-bottom: 16px; }
+.login-card .fg:last-child { margin-bottom: 0; }
+.login-card label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 5px; font-weight: 500; }
+.login-card input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; outline: none; background: var(--surface); color: var(--text); transition: border var(--transition); }
+.login-card input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+.login-card .btn-primary { width: 100%; justify-content: center; padding: 11px; margin-top: 4px; }
+.auth-err { display: none; color: var(--danger); font-size: 13px; text-align: center; padding: 8px; background: var(--danger-light); border-radius: var(--radius-sm); margin-bottom: 12px; }
+.auth-footer { text-align: center; margin-top: 16px; font-size: 13px; color: var(--text2); }
+.auth-footer a { color: var(--primary); cursor: pointer; }
+.auth-footer a:hover { text-decoration: underline; }
 
-/* ==================== Streak indicator ==================== */
-.streak-row { display: flex; gap: 4px; margin: 8px 0 12px; overflow-x: auto; padding: 4px 0; }
-.streak-day { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 600; flex-shrink: 0; background: var(--border-light); color: var(--text-muted); }
-.streak-day.has-note { background: var(--primary-light); color: var(--primary-text); }
-.streak-day.today { border: 2px solid var(--primary); }
+/* ─── App Shell ─── */
+#app { display: none; height: 100vh; }
+#app.show { display: flex; }
 
-/* ==================== Responsive ==================== */
-@media (min-width: 768px) {
-  .tab-page { max-width: 480px; margin: 0 auto; padding-left: 0; padding-right: 0; }
-  .editor-panel { max-width: 480px; left: 50%; transform: translateX(-50%) translateY(100%); }
-  .editor-panel.show { transform: translateX(-50%) translateY(0); }
-  .fab { right: calc(50% - 200px); }
+/* Sidebar */
+.sidebar { width: var(--sidebar-w); background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; transition: background .3s; }
+.sidebar-header { padding: 16px 16px 8px; display: flex; align-items: center; gap: 10px; }
+.sidebar-header .logo { width: 28px; height: 28px; background: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; }
+.sidebar-header h2 { font-size: 15px; font-weight: 700; flex: 1; }
+.sidebar-header .btn-icon { color: var(--text3); font-size: 14px; padding: 6px; border-radius: var(--radius-sm); }
+.sidebar-header .btn-icon:hover { background: var(--surface2); color: var(--text); }
+.sidebar-nav { flex: 1; overflow-y: auto; padding: 8px 8px; }
+.nav-section { margin-bottom: 4px; }
+.nav-section-title { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--text3); padding: 8px 12px 4px; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 7px 12px; border-radius: var(--radius-sm); font-size: 13px; color: var(--text2); cursor: pointer; transition: all var(--transition); border: none; background: none; width: 100%; text-align: left; }
+.nav-item i { width: 16px; font-size: 13px; text-align: center; flex-shrink: 0; }
+.nav-item:hover { background: var(--surface2); color: var(--text); }
+.nav-item.active { background: var(--primary-light); color: var(--primary-text); font-weight: 500; }
+.nav-item .badge { margin-left: auto; font-size: 11px; padding: 1px 6px; border-radius: 10px; background: var(--surface2); color: var(--text3); font-weight: 500; }
+.nav-item.active .badge { background: var(--primary); color: #fff; }
+.nav-item .notebook-color { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* Main area */
+.main-area { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.topbar { height: var(--nav-h); display: flex; align-items: center; padding: 0 16px; gap: 12px; border-bottom: 1px solid var(--border); background: var(--surface); flex-shrink: 0; transition: background .3s; }
+.topbar .search-wrap { flex: 1; position: relative; max-width: 420px; }
+.topbar .search-wrap input { width: 100%; padding: 7px 12px 7px 34px; border: none; border-radius: var(--radius-sm); font-size: 13px; outline: none; background: var(--surface2); color: var(--text); transition: all var(--transition); }
+.topbar .search-wrap input:focus { background: var(--surface); box-shadow: 0 0 0 2px var(--primary-light); }
+.topbar .search-wrap i { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 13px; color: var(--text3); pointer-events: none; }
+.topbar-right { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+.topbar-right .btn-icon { padding: 6px; border-radius: var(--radius-sm); color: var(--text3); font-size: 14px; }
+.topbar-right .btn-icon:hover { background: var(--surface2); color: var(--text); }
+.topbar-right .user-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--primary-light); color: var(--primary-text); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; cursor: pointer; }
+
+/* Content area */
+.content-area { flex: 1; display: flex; min-height: 0; }
+
+/* Note list panel */
+.note-list-panel { width: var(--list-w); border-right: 1px solid var(--border); display: flex; flex-direction: column; background: var(--surface); flex-shrink: 0; transition: background .3s; }
+.panel-header { padding: 12px 16px 8px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.panel-header h3 { font-size: 14px; font-weight: 600; color: var(--text); }
+.panel-header .count { font-size: 12px; color: var(--text3); }
+.list-toolbar { display: flex; gap: 4px; padding: 0 12px 8px; flex-shrink: 0; flex-wrap: wrap; }
+.list-toolbar .chip { padding: 3px 10px; border-radius: 14px; font-size: 11px; border: 1px solid var(--border); background: transparent; color: var(--text2); cursor: pointer; transition: all var(--transition); }
+.list-toolbar .chip:hover { border-color: var(--primary); color: var(--primary); }
+.list-toolbar .chip.active { background: var(--primary-light); border-color: var(--primary-light); color: var(--primary-text); }
+.note-list-scroll { flex: 1; overflow-y: auto; padding: 0 8px 8px; }
+.note-card { padding: 10px 12px; border-radius: var(--radius-sm); cursor: pointer; transition: all .12s; border: 1px solid transparent; margin-bottom: 2px; position: relative; }
+.note-card:hover { background: var(--surface2); }
+.note-card.selected { background: var(--primary-light); border-color: var(--primary); }
+.note-card .nc-title { font-size: 13px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 6px; }
+.note-card .nc-title .pin-icon { font-size: 10px; color: var(--accent); }
+.note-card .nc-snippet { font-size: 12px; color: var(--text3); line-height: 1.5; margin-top: 3px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.note-card .nc-meta { display: flex; align-items: center; gap: 8px; margin-top: 5px; font-size: 11px; color: var(--text3); }
+.note-card .nc-meta .nc-tags { display: flex; gap: 3px; flex-wrap: wrap; }
+.note-card .nc-meta .nc-tag { padding: 1px 6px; border-radius: 4px; background: var(--primary-light); color: var(--primary-text); font-size: 10px; }
+.note-card .nc-meta .nc-notebook { padding: 1px 6px; border-radius: 4px; background: var(--surface2); color: var(--text2); font-size: 10px; display: flex; align-items: center; gap: 3px; }
+.note-card .nc-actions { position: absolute; top: 6px; right: 6px; display: none; gap: 2px; }
+.note-card:hover .nc-actions { display: flex; }
+.note-card .nc-actions .btn-icon { padding: 3px 5px; font-size: 11px; border-radius: 4px; color: var(--text3); }
+.note-card .nc-actions .btn-icon:hover { background: var(--border); color: var(--text); }
+.note-card .nc-actions .btn-icon.pin-active { color: var(--accent); }
+.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 200px; color: var(--text3); font-size: 13px; }
+.empty-state i { font-size: 32px; margin-bottom: 12px; opacity: .4; }
+
+/* Editor panel */
+.editor-panel { flex: 1; display: flex; flex-direction: column; background: var(--surface); min-width: 0; transition: background .3s; }
+.editor-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; color: var(--text3); font-size: 14px; padding: 40px; text-align: center; }
+.editor-empty i { font-size: 48px; opacity: .2; margin-bottom: 16px; }
+.editor-empty h2 { font-size: 18px; color: var(--text2); margin-bottom: 8px; font-weight: 600; }
+.editor-empty p { font-size: 13px; max-width: 280px; line-height: 1.6; }
+.editor-toolbar { display: none; padding: 8px 16px 4px; gap: 8px; align-items: center; flex-shrink: 0; border-bottom: 1px solid var(--border); }
+.editor-toolbar.show { display: flex; }
+.editor-toolbar .et-left { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+.editor-toolbar .et-date { font-size: 11px; color: var(--text3); white-space: nowrap; }
+.editor-toolbar .et-title input { border: none; background: none; font-size: 16px; font-weight: 600; color: var(--text); outline: none; width: 100%; min-width: 60px; padding: 4px 0; }
+.editor-toolbar .et-title input::placeholder { color: var(--text3); }
+.editor-toolbar .et-right { display: flex; gap: 4px; flex-shrink: 0; align-items: center; }
+.editor-toolbar .et-right .btn-icon { padding: 5px; border-radius: 4px; font-size: 13px; color: var(--text3); }
+.editor-toolbar .et-right .btn-icon:hover { background: var(--surface2); color: var(--text); }
+.editor-toolbar .et-right .btn-icon.pin-active { color: var(--accent); }
+.editor-body { display: none; flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.editor-body.show { display: flex; }
+.editor-body #editor-container { flex: 1; display: flex; flex-direction: column; }
+.editor-body .ql-toolbar { border: none; border-radius: 0; background: transparent; padding: 4px 12px; flex-shrink: 0; border-bottom: 1px solid var(--border); }
+.editor-body .ql-container { border: none; flex: 1; font-size: 14px; }
+.editor-body .ql-editor { padding: 16px 20px; }
+.editor-body .ql-editor.ql-blank::before { color: var(--text3); font-style: normal; }
+.editor-footer { display: none; padding: 6px 16px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text3); align-items: center; gap: 12px; flex-shrink: 0; }
+.editor-footer.show { display: flex; }
+.editor-footer .save-status { display: flex; align-items: center; gap: 4px; }
+.editor-footer .save-status.saving { color: var(--accent); }
+.editor-footer .save-status.saved { color: var(--success); }
+.editor-footer .save-status.error { color: var(--danger); }
+.editor-footer .tag-bar { display: flex; align-items: center; gap: 4px; flex: 1; flex-wrap: wrap; }
+.editor-footer .tag-bar .tag-edit { display: inline-flex; align-items: center; gap: 2px; padding: 1px 6px; border-radius: 4px; background: var(--primary-light); color: var(--primary-text); font-size: 10px; cursor: pointer; }
+.editor-footer .tag-bar .tag-edit .remove { cursor: pointer; opacity: .5; }
+.editor-footer .tag-bar .tag-edit .remove:hover { opacity: 1; }
+.editor-footer .tag-bar .tag-input-mini { border: none; background: none; font-size: 11px; color: var(--text3); outline: none; width: 60px; padding: 2px; }
+.editor-footer .tag-bar .tag-input-mini::placeholder { color: var(--text3); }
+
+/* ─── Dashboard ─── */
+.dashboard { display: none; flex: 1; flex-direction: column; overflow-y: auto; padding: 24px 28px; }
+.dashboard.show { display: flex; }
+.db-header { margin-bottom: 24px; }
+.db-header h2 { font-size: 20px; font-weight: 700; }
+.db-header p { color: var(--text2); font-size: 13px; margin-top: 4px; }
+.db-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-bottom: 28px; }
+.db-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+.db-card .db-value { font-size: 24px; font-weight: 700; color: var(--primary); }
+.db-card .db-label { font-size: 12px; color: var(--text2); margin-top: 4px; }
+.db-card .db-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+.db-section-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 12px; }
+.heatmap-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 28px; overflow-x: auto; }
+.heatmap-wrap canvas { display: block; }
+.recent-notes { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+.recent-card { padding: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; transition: all var(--transition); }
+.recent-card:hover { border-color: var(--primary); box-shadow: var(--shadow); }
+.recent-card .rc-title { font-size: 13px; font-weight: 600; color: var(--text); }
+.recent-card .rc-snippet { font-size: 12px; color: var(--text3); margin-top: 4px; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; display: -webkit-box; }
+.recent-card .rc-date { font-size: 11px; color: var(--text3); margin-top: 6px; }
+
+/* ─── Quick Capture Modal ─── */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); display: none; justify-content: center; align-items: flex-start; padding-top: 80px; z-index: 9998; backdrop-filter: blur(4px); }
+.modal-overlay.show { display: flex; }
+.modal-box { width: 520px; max-width: 90vw; background: var(--surface); border-radius: 12px; box-shadow: var(--shadow-lg); overflow: hidden; }
+.modal-header { padding: 16px 20px 0; display: flex; align-items: center; justify-content: space-between; }
+.modal-header h3 { font-size: 15px; font-weight: 600; }
+.modal-header .close-btn { padding: 4px 8px; border-radius: 4px; color: var(--text3); }
+.modal-header .close-btn:hover { background: var(--surface2); }
+.modal-body { padding: 12px 20px 20px; }
+.modal-body .qc-title { width: 100%; padding: 8px 0; border: none; background: none; font-size: 16px; font-weight: 600; color: var(--text); outline: none; }
+.modal-body .qc-title::placeholder { color: var(--text3); }
+.modal-body .qc-editor { min-height: 120px; margin-top: 8px; }
+.modal-body .qc-editor .ql-editor { min-height: 100px; padding: 0; }
+.modal-body .qc-editor .ql-container { font-size: 14px; }
+.modal-body .qc-editor .ql-toolbar { padding: 4px 0; }
+.modal-footer { display: flex; align-items: center; gap: 8px; padding: 12px 20px; border-top: 1px solid var(--border); }
+.modal-footer .btn { padding: 7px 16px; font-size: 13px; }
+.modal-footer .qc-tags { flex: 1; display: flex; gap: 4px; flex-wrap: wrap; }
+.modal-footer .qc-tags .qc-tag { padding: 2px 8px; border-radius: 4px; background: var(--primary-light); color: var(--primary-text); font-size: 11px; display: flex; align-items: center; gap: 3px; }
+.modal-footer .qc-tags .qc-tag .remove { cursor: pointer; opacity: .5; }
+.modal-footer .qc-tags .qc-tag .remove:hover { opacity: 1; }
+.modal-footer .qc-tag-input { border: none; background: none; font-size: 12px; color: var(--text3); outline: none; width: 50px; }
+
+/* ─── User dropdown ─── */
+.user-dropdown { position: absolute; top: 44px; right: 8px; width: 180px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-lg); display: none; z-index: 100; }
+.user-dropdown.show { display: block; }
+.user-dropdown .ud-item { display: flex; align-items: center; gap: 10px; padding: 9px 14px; font-size: 13px; color: var(--text2); cursor: pointer; border: none; background: none; width: 100%; text-align: left; transition: background .1s; }
+.user-dropdown .ud-item:hover { background: var(--surface2); color: var(--text); }
+.user-dropdown .ud-item:first-child { border-radius: var(--radius) var(--radius) 0 0; }
+.user-dropdown .ud-item:last-child { border-radius: 0 0 var(--radius) var(--radius); border-top: 1px solid var(--border); color: var(--danger); }
+
+/* ─── Responsive ─── */
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .note-list-panel { width: 100%; }
+  .editor-panel { display: none; }
+  .editor-panel.show-mobile { display: flex; position: fixed; inset: 0; z-index: 50; background: var(--surface); }
+  .dashboard { padding: 16px; }
+  .db-grid { grid-template-columns: repeat(2, 1fr); }
+  .recent-notes { grid-template-columns: 1fr; }
+  .sidebar.mobile-show { display: flex; position: fixed; inset: 0; z-index: 60; width: 260px; }
+  .topbar { padding: 0 12px; }
+}
+@media (max-width: 480px) {
+  .db-grid { grid-template-columns: 1fr 1fr; }
+  .dashboard { padding: 12px; }
 }
 </style>
 </head>
 <body>
 
-<!-- ==================== Auth ==================== -->
-<div id="authPage" class="auth-page show">
-  <div class="auth-box">
-    <div class="auth-logo">
-      <i class="fas fa-book"></i>
-      <h1>每日笔记</h1>
-      <p>记录每一天的思考与灵感</p>
-    </div>
-    <div class="auth-field">
-      <label>邮箱</label>
-      <input type="email" id="authEmail" placeholder="your@email.com" onkeydown="if(event.key==='Enter')handleAuth()">
-    </div>
-    <div class="auth-field">
-      <label>密码</label>
-      <input type="password" id="authPassword" placeholder="输入密码" onkeydown="if(event.key==='Enter')handleAuth()">
-    </div>
-    <div class="auth-field" id="confirmGroup" style="display:none;">
-      <label>确认密码</label>
-      <input type="password" id="authConfirm" placeholder="再次输入密码" onkeydown="if(event.key==='Enter')handleAuth()">
-    </div>
-    <div id="authError" class="auth-error"></div>
-    <button class="auth-btn" id="authBtn" onclick="handleAuth()"><i class="fas fa-sign-in-alt"></i> 登录</button>
-    <div class="auth-footer">
-      <span id="authToggleText">没有账号？</span>
-      <a id="authToggleLink" onclick="toggleAuthMode()">立即注册</a>
-    </div>
-  </div>
-</div>
-
-<!-- ==================== Main App ==================== -->
-<div id="appContent">
-  <div class="tab-pages">
-
-    <!-- ========== Tab: Notes ========== -->
-    <div id="pageNotes" class="tab-page active">
-      <div class="page-header">
-        <h1><i class="fas fa-book" style="color:var(--primary);margin-right:4px;"></i>笔记</h1>
-        <div class="page-header-actions">
-          <button class="header-btn" onclick="toggleDarkMode()" id="darkModeBtn" title="切换主题"><i class="fas fa-moon"></i></button>
-          <button class="header-btn avatar" id="userAvatarBtn" title="个人"></button>
-        </div>
-      </div>
-      <div class="notes-tabs" id="notesTabBar">
-        <button class="notes-tab active" data-tab="active" onclick="switchTab('active')">全部</button>
-        <button class="notes-tab" data-tab="pinned" onclick="switchTab('pinned')"><i class="fas fa-thumbtack"></i> 置顶</button>
-        <button class="notes-tab" data-tab="archived" onclick="switchTab('archived')"><i class="fas fa-archive"></i> 归档</button>
-      </div>
-      <div id="notesTimeline"></div>
-    </div>
-
-    <!-- ========== Tab: Search ========== -->
-    <div id="pageSearch" class="tab-page">
-      <div class="page-header">
-        <h1><i class="fas fa-search" style="color:var(--primary);margin-right:4px;"></i>搜索</h1>
-      </div>
-      <div class="search-box">
-        <i class="fas fa-search"></i>
-        <input type="text" id="searchInput" placeholder="搜索笔记、内容或 #标签..." oninput="onSearchInput()">
-        <button class="clear-btn" id="searchClearBtn" onclick="clearSearch()"><i class="fas fa-times-circle"></i></button>
-      </div>
-      <div id="searchResults"></div>
-    </div>
-
-    <!-- ========== Tab: Tags ========== -->
-    <div id="pageTags" class="tab-page">
-      <div class="page-header">
-        <h1><i class="fas fa-tags" style="color:var(--primary);margin-right:4px;"></i>标签</h1>
-      </div>
-      <div id="tagCloud" class="tag-cloud"></div>
-      <div id="tagNotesSection" style="display:none;">
-        <div class="tag-notes-title">
-          <span id="selectedTagName"></span>
-          <span class="clear" onclick="clearSelectedTag()">清除筛选</span>
-        </div>
-        <div id="tagFilteredNotes"></div>
-      </div>
-    </div>
-
-    <!-- ========== Tab: Profile ========== -->
-    <div id="pageProfile" class="tab-page">
-      <div class="profile-header">
-        <div class="profile-avatar" id="profileAvatar">U</div>
-        <div class="profile-info">
-          <h2 id="profileName">用户</h2>
-          <p id="profileEmail">user@email.com</p>
-        </div>
-      </div>
-      <div class="profile-stats" id="profileStats">
-        <div class="stat-card"><div class="num" id="statNotes">0</div><div class="label">笔记</div></div>
-        <div class="stat-card"><div class="num" id="statWords">0</div><div class="label">字数</div></div>
-        <div class="stat-card"><div class="num" id="statStreak">0</div><div class="label">连续天数</div></div>
-      </div>
-      <div class="settings-group">
-        <div class="settings-item" onclick="toggleDarkMode()">
-          <div class="settings-item-left"><i class="fas fa-moon"></i><span>深色模式</span></div>
-          <button class="toggle-switch" id="darkModeToggle"></button>
-        </div>
-        <div class="settings-item" onclick="exportAllNotes()">
-          <div class="settings-item-left"><i class="fas fa-download"></i><span>导出全部笔记</span></div>
-          <span class="badge">Markdown</span>
-        </div>
-        <div class="settings-item" onclick="signOut()">
-          <div class="settings-item-left"><i class="fas fa-sign-out-alt" style="color:var(--danger);"></i><span style="color:var(--danger);">退出登录</span></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ========== Bottom Tabs ========== -->
-  <div class="bottom-tabs">
-    <button class="tab-btn active" data-page="notes" onclick="switchPage('notes')"><i class="fas fa-file-alt"></i><span>笔记</span></button>
-    <button class="tab-btn" data-page="search" onclick="switchPage('search')"><i class="fas fa-search"></i><span>搜索</span></button>
-    <button class="tab-btn" data-page="tags" onclick="switchPage('tags')"><i class="fas fa-tags"></i><span>标签</span></button>
-    <button class="tab-btn" data-page="profile" onclick="switchPage('profile')"><i class="fas fa-user"></i><span>我的</span></button>
-  </div>
-
-  <!-- ========== FAB ========== -->
-  <button class="fab" id="fabBtn" onclick="openEditor()"><i class="fas fa-plus"></i></button>
-
-  <!-- ========== Editor Overlay ========== -->
-  <div class="editor-overlay" id="editorOverlay" onclick="closeEditor()"></div>
-
-  <!-- ========== Editor Panel ========== -->
-  <div class="editor-panel" id="editorPanel">
-    <div class="editor-handle"></div>
-    <div class="editor-header">
-      <div class="editor-header-left">
-        <button class="editor-back" onclick="closeEditor()"><i class="fas fa-chevron-down"></i></button>
-        <h2 id="editorTitle">新笔记</h2>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <span class="save-status" id="saveStatus"><i class="fas fa-check-circle"></i> 已保存</span>
-        <button class="editor-save-btn" id="saveBtn" onclick="saveNote()"><i class="fas fa-check"></i> 保存</button>
-      </div>
-    </div>
-    <div class="editor-body">
-      <div class="editor-field">
-        <label>日期</label>
-        <input type="date" id="noteDate">
-      </div>
-      <div class="editor-field">
-        <label>标题</label>
-        <input type="text" id="noteTitle" placeholder="笔记标题">
-      </div>
-      <div class="editor-field">
-        <label>内容</label>
-        <div id="editorContainer"></div>
-      </div>
-      <div class="editor-field">
-        <label>标签 <span style="font-weight:400;color:var(--text-muted);font-size:12px;">Enter 添加</span></label>
-        <div class="tag-editor" onclick="document.getElementById('tagInput').focus()">
-          <div id="tagList" style="display:flex;flex-wrap:wrap;gap:4px;"></div>
-          <input type="text" id="tagInput" placeholder="#标签">
-        </div>
-        <div id="existingTags" class="existing-tags-bar" style="display:none;"></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ==================== Toast ==================== -->
 <div id="toast" class="toast"></div>
 
-<!-- ==================== Confirm Modal ==================== -->
-<div class="modal-overlay" id="confirmModal">
+<!-- ─── Login ─── -->
+<div id="loginPage" class="show">
+  <div class="login-card">
+    <h1><i class="fas fa-feather" style="color:var(--primary);"></i> Notes</h1>
+    <div class="sub">记录每一天的思考与灵感</div>
+    <div id="authErr" class="auth-err"></div>
+    <div class="fg">
+      <label>邮箱</label>
+      <input type="email" id="authEmail" placeholder="your@email.com" autocomplete="email">
+    </div>
+    <div class="fg">
+      <label>密码</label>
+      <input type="password" id="authPassword" placeholder="至少 6 位" autocomplete="current-password">
+    </div>
+    <div class="fg" id="confirmGroup" style="display:none;">
+      <label>确认密码</label>
+      <input type="password" id="authConfirm" placeholder="再次输入密码">
+    </div>
+    <button class="btn btn-primary" id="authBtn">登录</button>
+    <div class="auth-footer">
+      <span id="authToggleText">没有账号？</span>
+      <a id="authToggleLink">立即注册</a>
+    </div>
+  </div>
+</div>
+
+<!-- ─── App ─── -->
+<div id="app">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo"><i class="fas fa-feather"></i></div>
+      <h2>Notes</h2>
+      <button class="btn-icon" onclick="toggleSidebar()" title="收起侧栏"><i class="fas fa-bars"></i></button>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <button class="nav-item active" data-view="all" onclick="switchView('all')"><i class="far fa-file-alt"></i> 所有笔记 <span class="badge" id="badgeAll">0</span></button>
+        <button class="nav-item" data-view="today" onclick="switchView('today')"><i class="far fa-calendar-check"></i> 今天</button>
+        <button class="nav-item" data-view="favorites" onclick="switchView('favorites')"><i class="far fa-star"></i> 收藏</button>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">笔记本</div>
+        <div id="notebookList"></div>
+        <button class="nav-item" onclick="addNotebook()" style="color:var(--text3);font-size:12px;"><i class="fas fa-plus"></i> 新建笔记本</button>
+      </div>
+      <div class="nav-section" style="margin-top:8px;">
+        <button class="nav-item" data-view="archive" onclick="switchView('archive')"><i class="far fa-archive"></i> 归档 <span class="badge" id="badgeArchive">0</span></button>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <div class="main-area">
+    <!-- Top bar -->
+    <div class="topbar">
+      <button class="btn-icon" onclick="toggleSidebar()" style="display:none;" id="menuBtn"><i class="fas fa-bars"></i></button>
+      <div class="search-wrap">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" placeholder="搜索笔记..." oninput="onSearch()">
+      </div>
+      <div class="topbar-right">
+        <button class="btn-icon" onclick="showQuickCapture()" title="快速记录 (N)"><i class="fas fa-bolt"></i></button>
+        <button class="btn-icon" onclick="toggleDarkMode()" id="dmBtn" title="深色模式"><i class="fas fa-moon"></i></button>
+        <div style="position:relative;">
+          <div class="user-avatar" id="userAvatar" onclick="toggleUserMenu()">U</div>
+          <div class="user-dropdown" id="userMenu">
+            <div class="ud-item"><i class="far fa-user"></i> <span id="userEmail2">user@email.com</span></div>
+            <button class="ud-item" onclick="exportAllNotes()"><i class="fas fa-download"></i> 导出全部</button>
+            <button class="ud-item" onclick="signOut()"><i class="fas fa-sign-out-alt"></i> 退出登录</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="content-area">
+      <!-- Note list -->
+      <div class="note-list-panel" id="noteListPanel">
+        <div class="panel-header">
+          <h3 id="listTitle">所有笔记</h3>
+          <span class="count" id="listCount">0 篇</span>
+        </div>
+        <div class="list-toolbar" id="listToolbar">
+          <button class="chip" data-sort="newest" onclick="setSort('newest')">最新</button>
+          <button class="chip" data-sort="oldest" onclick="setSort('oldest')">最早</button>
+          <button class="chip" data-sort="pinned" onclick="setSort('pinned')">置顶</button>
+        </div>
+        <div class="note-list-scroll" id="noteListScroll"></div>
+      </div>
+
+      <!-- Editor -->
+      <div class="editor-panel" id="editorPanel">
+        <div class="editor-empty" id="editorEmpty">
+          <i class="far fa-file-alt"></i>
+          <h2>选择一篇笔记</h2>
+          <p>从左侧列表选择已有笔记，或点击 <i class="fas fa-bolt"></i> 快速记录新想法</p>
+        </div>
+        <div class="editor-toolbar" id="editorToolbar">
+          <div class="et-left">
+            <div class="et-title"><input type="text" id="noteTitle" placeholder="笔记标题"></div>
+          </div>
+          <div class="et-right">
+            <span class="et-date" id="noteDateDisplay"></span>
+            <button class="btn-icon" id="pinBtn" onclick="togglePinCurrent()" title="置顶"><i class="fas fa-thumbtack"></i></button>
+            <button class="btn-icon" id="favBtn" onclick="toggleFavCurrent()" title="收藏"><i class="far fa-star"></i></button>
+            <button class="btn-icon" onclick="exportCurrentNote()" title="导出"><i class="fas fa-download"></i></button>
+            <button class="btn-icon" onclick="archiveCurrentNote()" title="归档"><i class="fas fa-archive"></i></button>
+          </div>
+        </div>
+        <div class="editor-body" id="editorBody">
+          <div id="editorContainer"></div>
+        </div>
+        <div class="editor-footer" id="editorFooter">
+          <div class="tag-bar" id="tagBar"></div>
+          <span class="save-status saved" id="saveStatus"><i class="fas fa-check-circle"></i> 已保存</span>
+        </div>
+      </div>
+
+      <!-- Dashboard -->
+      <div class="dashboard show" id="dashboard">
+        <div class="db-header">
+          <h2>概览</h2>
+          <p id="dashGreeting"></p>
+        </div>
+        <div class="db-grid">
+          <div class="db-card"><div class="db-value" id="dashNotes">0</div><div class="db-label">总笔记</div><div class="db-sub">累计记录</div></div>
+          <div class="db-card"><div class="db-value" id="dashWords">0</div><div class="db-label">总字数</div><div class="db-sub">文本统计</div></div>
+          <div class="db-card"><div class="db-value" id="dashStreak">0</div><div class="db-label">连续记录</div><div class="db-sub">天</div></div>
+          <div class="db-card"><div class="db-value" id="dashToday">0</div><div class="db-label">今日已写</div><div class="db-sub">篇</div></div>
+        </div>
+        <div class="db-section-title">记录热力图</div>
+        <div class="heatmap-wrap"><canvas id="heatmap" height="120"></canvas></div>
+        <div class="db-section-title">最近的笔记</div>
+        <div class="recent-notes" id="recentNotes"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Quick Capture Modal ─── -->
+<div class="modal-overlay" id="qcModal">
   <div class="modal-box">
-    <div class="modal-title" id="modalTitle">确认</div>
-    <div class="modal-text" id="modalText">确定执行此操作吗？</div>
-    <div class="modal-actions">
-      <button class="modal-btn-secondary" onclick="closeModal()">取消</button>
-      <button class="modal-btn-danger" id="modalConfirmBtn" onclick="closeModal()">确定</button>
+    <div class="modal-header">
+      <h3><i class="fas fa-bolt" style="color:var(--accent);"></i> 快速记录</h3>
+      <button class="btn-icon close-btn" onclick="hideQuickCapture()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <input class="qc-title" id="qcTitle" placeholder="标题（可选）" autofocus>
+      <div id="qcEditor"></div>
+    </div>
+    <div class="modal-footer">
+      <div class="qc-tags" id="qcTags"></div>
+      <input class="qc-tag-input" id="qcTagInput" placeholder="#标签" onkeydown="if(event.key==='Enter'){event.preventDefault();addQcTag();}">
+      <select id="qcNotebook" style="font-size:12px;padding:4px 8px;border-radius:4px;border:1px solid var(--border);background:var(--surface);color:var(--text);outline:none;"></select>
+      <button class="btn btn-primary" onclick="saveQuickCapture()">保存</button>
     </div>
   </div>
 </div>
@@ -452,807 +410,505 @@ input, textarea, button { font-family: inherit; }
 const SUPABASE_URL = 'https://gtgtbsylalibqhxztcta.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_1YHehRDqEXk2IRCJc3AmyA__8B5fe-x';
 
-let supabaseClient = null;
-let notesCache = [];
+let sb, user = null, session = null;
+let notes = [], notebooks = [];
+let quill, qcQuill;
 let currentNoteId = null;
-let quill = null;
-let authMode = 'login';
-let currentTab = 'active';
-let isDarkMode = localStorage.getItem('daily_notes_dark_mode') === 'true';
-let searchKeyword = '';
-let selectedTag = null;
-let confirmCallback = null;
+let currentView = 'all';
+let currentSort = 'newest';
+let searchTerm = '';
+let isDark = localStorage.getItem('dn_dark') === 'true';
+let selectedNoteId = null;
+let saveTimer = null;
 
-function escapeHtml(str) {
-  let d = document.createElement('div');
-  d.appendChild(document.createTextNode(str));
-  return d.innerHTML;
+/* ─── Helpers ─── */
+function esc(s){let d=document.createElement('div');d.appendChild(document.createTextNode(s));return d.innerHTML;}
+function strip(html){let d=document.createElement('div');d.innerHTML=html;return d.textContent||'';}
+function dateStr(d){return d.toISOString().slice(0,10);}
+function fmtDate(s){let d=new Date(s+'T00:00:00');return (d.getMonth()+1)+'月'+d.getDate()+'日 周' + ['日','一','二','三','四','五','六'][d.getDay()];}
+function $(id){return document.getElementById(id);}
+
+function toast(msg,type){
+  let t=$('toast');t.textContent=msg;t.className='toast '+type+' show';
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3000);
 }
 
-function stripHtml(html) {
-  let d = document.createElement('div');
-  d.innerHTML = html;
-  return d.textContent || d.innerText || '';
+/* ─── Auth ─── */
+let authMode='login';
+$('authToggleLink').onclick=()=>{
+  authMode=authMode==='login'?'register':'login';
+  $('authErr').style.display='none';
+  $('confirmGroup').style.display=authMode==='register'?'block':'none';
+  $('authBtn').textContent=authMode==='login'?'登录':'注册';
+  $('authToggleText').textContent=authMode==='login'?'没有账号？':'已有账号？';
+  $('authToggleLink').textContent=authMode==='login'?'立即注册':'立即登录';
+};
+$('authBtn').onclick=handleAuth;
+['keydown'].forEach(e=>document.addEventListener(e,ev=>{if(ev.key==='Enter'&&$('loginPage').classList.contains('show'))handleAuth();}));
+
+async function handleAuth(){
+  let email=$('authEmail').value.trim(),pass=$('authPassword').value;
+  if(!email||!pass){showAuthErr('请填写邮箱和密码');return;}
+  if(pass.length<6){showAuthErr('密码至少 6 位');return;}
+  if(authMode==='register'&&pass!==$('authConfirm').value){showAuthErr('两次密码不一致');return;}
+  $('authErr').style.display='none';
+  let btn=$('authBtn');btn.disabled=true;btn.textContent='处理中...';
+  try{
+    if(authMode==='login'){
+      let {error}=await sb.auth.signInWithPassword({email,pass});
+      if(error)throw error;
+    }else{
+      let {error}=await sb.auth.signUp({email,password:pass});
+      if(error)throw error;
+      toast('注册成功，请查看邮箱确认','success');
+    }
+  }catch(e){showAuthErr(e.message);}
+  finally{btn.disabled=false;btn.textContent=authMode==='login'?'登录':'注册';}
+}
+function showAuthErr(m){let e=$('authErr');e.textContent=m;e.style.display='block';}
+
+/* ─── Sign out / in ─── */
+async function signOut(){await sb.auth.signOut();}
+function showApp(){
+  $('loginPage').classList.remove('show');
+  $('app').classList.add('show');
+  $('userEmail2').textContent=user.email;
+  $('userAvatar').textContent=user.email.charAt(0).toUpperCase();
+  if(isDark)applyDark();
+  initDashboard();
+  loadNotes();
+  loadNotebooks();
+}
+function showLogin(){
+  $('loginPage').classList.add('show');
+  $('app').classList.remove('show');
+  notes=[];currentNoteId=null;selectedNoteId=null;
 }
 
-function fmtDate(dateStr) {
-  let d = new Date(dateStr + 'T00:00:00');
-  let today = new Date(); today.setHours(0,0,0,0);
-  let yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
-  let diff = Math.round((today - d) / 86400000);
-  if (diff === 0) return '今天';
-  if (diff === 1) return '昨天';
-  let m = d.getMonth() + 1;
-  let day = d.getDate();
-  let weekdays = ['日','一','二','三','四','五','六'];
-  if (diff < 7) return '周' + weekdays[d.getDay()];
-  return m + '月' + day + '日';
-}
+/* ─── Dark mode ─── */
+function applyDark(){document.documentElement.setAttribute('data-theme','dark');$('dmBtn').innerHTML='<i class="fas fa-sun"></i>';}
+function applyLight(){document.documentElement.removeAttribute('data-theme');$('dmBtn').innerHTML='<i class="fas fa-moon"></i>';}
+function toggleDarkMode(){isDark=!isDark;localStorage.setItem('dn_dark',isDark);isDark?applyDark():applyLight();}
 
-function fmtDateFull(dateStr) {
-  let d = new Date(dateStr + 'T00:00:00');
-  let m = d.getMonth() + 1;
-  let day = d.getDate();
-  return dateStr.slice(0,4) + '年' + m + '月' + day + '日';
+/* ─── Sidebar ─── */
+function toggleSidebar(){
+  let w=innerWidth;
+  if(w<=900){$('sidebar').classList.toggle('mobile-show');}
 }
+function closeMobileSidebar(){if(innerWidth<=900)$('sidebar').classList.remove('mobile-show');}
 
-function showToast(msg, type) {
-  let t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast ' + type + ' show';
-  clearTimeout(t._hideTimer);
-  t._hideTimer = setTimeout(() => t.classList.remove('show'), 3000);
+/* ─── Views ─── */
+function switchView(view){
+  currentView=view;
+  document.querySelectorAll('.nav-item[data-view]').forEach(el=>el.classList.toggle('active',el.dataset.view===view));
+  let titles={'all':'所有笔记','today':'今天','favorites':'收藏','archive':'归档'};
+  $('listTitle').textContent=titles[view]||'笔记';
+  closeMobileSidebar();
+  applyFilters();
+  if(view==='all'||view==='today')showDashboard();
 }
+function showDashboard(){if(!selectedNoteId&&!$('editorBody').classList.contains('show')){$('dashboard').classList.add('show');$('noteListPanel').classList.remove('hidden');}}
+function hideDashboard(){$('dashboard').classList.remove('show');}
 
-function getCurrentTags() {
-  let tags = [];
-  document.querySelectorAll('#tagList .tag-badge').forEach(el => tags.push(el.getAttribute('data-tag')));
-  return tags;
+/* ─── Notebooks ─── */
+async function loadNotebooks(){
+  try{
+    let {data}=await sb.from('daily_notes').select('notebook').not('notebook','is',null).not('notebook','eq','').neq('archived',true);
+    let set=new Set();if(data)data.forEach(r=>{if(r.notebook)set.add(r.notebook);});
+    notebooks=[...set].sort();
+  }catch(e){notebooks=[];}
+  renderNotebooks();
 }
-
-function renderTags(tags) {
-  let container = document.getElementById('tagList');
-  container.innerHTML = tags.map(t =>
-    '<span class="tag-badge" data-tag="' + escapeHtml(t) + '">' +
-      escapeHtml(t) +
-      '<span class="remove" onclick="event.stopPropagation();removeTag(\'' + escapeHtml(t).replace(/'/g, "\\'") + '\')">&times;</span>' +
-    '</span>'
-  ).join('');
-  renderExistingTags();
-}
-
-function addTag() {
-  let input = document.getElementById('tagInput');
-  let tag = input.value.trim().replace(/^#+/, '');
-  if (!tag) return;
-  let current = getCurrentTags();
-  if (current.includes(tag)) { showToast('标签"' + tag + '"已存在', 'warning'); input.value = ''; return; }
-  current.push(tag);
-  renderTags(current);
-  input.value = '';
-  input.focus();
-}
-
-function removeTag(tag) {
-  renderTags(getCurrentTags().filter(t => t !== tag));
-}
-
-function togglePresetTag(tag) {
-  let current = getCurrentTags();
-  if (current.includes(tag)) current = current.filter(t => t !== tag);
-  else current.push(tag);
-  renderTags(current);
-}
-
-function renderExistingTags() {
-  let allTags = new Set();
-  notesCache.forEach(n => (n.tags || []).forEach(t => allTags.add(t)));
-  let el = document.getElementById('existingTags');
-  if (allTags.size === 0) { el.style.display = 'none'; return; }
-  let currentTags = getCurrentTags();
-  let html = '';
-  allTags.forEach(tag => {
-    let active = currentTags.includes(tag) ? 'active' : '';
-    html += '<span class="preset-tag ' + active + '" onclick="togglePresetTag(\'' + escapeHtml(tag).replace(/'/g, "\\'") + '\')">' + escapeHtml(tag) + '</span>';
+function renderNotebooks(){
+  let el=$('notebookList');el.innerHTML='';
+  notebooks.forEach(nb=>{
+    let b=document.createElement('button');b.className='nav-item';
+    b.innerHTML='<span class="notebook-color" style="background:'+stringToColor(nb)+'"></span>'+esc(nb);
+    b.onclick=()=>{currentView='notebook';currentNotebook=nb;switchView('notebook');};
+    let count=notes.filter(n=>n.notebook===nb&&!n.archived).length;
+    if(count>0){let s=document.createElement('span');s.className='badge';s.textContent=count;b.appendChild(s);}
+    el.appendChild(b);
   });
-  el.innerHTML = html;
-  el.style.display = 'flex';
+}
+function stringToColor(s){
+  let h=0;for(let i=0;i<s.length;i++)h=s.charCodeAt(i)+((h<<5)-h);
+  let c='hsl('+(h%360)+',50%,55%)';return c;
+}
+function addNotebook(){
+  let name=prompt('笔记本名称：');if(!name||!name.trim())return;
+  // just a visual notebook - notes can be assigned via editing
+  notebooks.push(name.trim());renderNotebooks();
+  toast('已创建笔记本 "'+name.trim()+'"','success');
 }
 
-function clearForm() {
-  currentNoteId = null;
-  document.getElementById('noteDate').value = new Date().toISOString().slice(0, 10);
-  document.getElementById('noteTitle').value = '';
-  if (quill) quill.root.innerHTML = '';
-  renderTags([]);
-  document.getElementById('editorTitle').textContent = '新笔记';
-  localStorage.removeItem('daily_notes_draft');
+/* ─── Dashboard ─── */
+function initDashboard(){
+  let h=new Date().getHours();
+  let g=h<12?'早上好':h<18?'下午好':'晚上好';
+  $('dashGreeting').textContent=g+', '+(user.email||'朋友')+'。今天想记录什么？';
+}
+function updateDashboard(){
+  let active=notes.filter(n=>!n.archived);
+  $('dashNotes').textContent=active.length;
+  let words=0;active.forEach(n=>words+=strip(n.content||'').length);
+  $('dashWords').textContent=words;
+  let today=dateStr(new Date());
+  $('dashToday').textContent=active.filter(n=>n.date===today).length;
+  // Streak
+  let days=[...new Set(active.map(n=>n.date))].sort().reverse();
+  let streak=0,check=new Date(today+'T00:00:00');
+  for(let i=0;i<days.length;i++){
+    let diff=Math.round((check-new Date(days[i]+'T00:00:00'))/(86400000));
+    if(diff===streak)streak++;else break;
+  }
+  $('dashStreak').textContent=streak;
+  // Recent notes
+  let recent=active.slice(0,12);
+  let html='';recent.forEach(n=>{
+    let s=strip(n.content||'').substring(0,100);
+    html+='<div class="recent-card" onclick="openNote(\''+n.id+'\')"><div class="rc-title">'+esc(n.title||'无标题')+'</div><div class="rc-snippet">'+esc(s)+'</div><div class="rc-date">'+fmtDate(n.date)+'</div></div>';
+  });
+  $('recentNotes').innerHTML=html||'<div style="color:var(--text3);font-size:13px;">还没有笔记</div>';
+  drawHeatmap(active);
 }
 
-/* ==================== Auth ==================== */
-function showAuthError(msg) {
-  let el = document.getElementById('authError');
-  el.textContent = msg;
-  el.style.display = 'block';
-}
-
-function hideAuthError() {
-  document.getElementById('authError').style.display = 'none';
-}
-
-function toggleAuthMode() {
-  authMode = authMode === 'login' ? 'register' : 'login';
-  hideAuthError();
-  if (authMode === 'register') {
-    document.getElementById('confirmGroup').style.display = 'block';
-    document.getElementById('authBtn').innerHTML = '<i class="fas fa-user-plus"></i> 注册';
-    document.getElementById('authToggleText').textContent = '已有账号？';
-    document.getElementById('authToggleLink').textContent = '立即登录';
-  } else {
-    document.getElementById('confirmGroup').style.display = 'none';
-    document.getElementById('authBtn').innerHTML = '<i class="fas fa-sign-in-alt"></i> 登录';
-    document.getElementById('authToggleText').textContent = '没有账号？';
-    document.getElementById('authToggleLink').textContent = '立即注册';
+/* ─── Heatmap ─── */
+function drawHeatmap(records){
+  let c=$('heatmap'),ctx=c.getContext('2d');
+  let W=c.parentElement.clientWidth-32||600;
+  c.width=W;c.height=120;
+  ctx.fillStyle=document.documentElement.getAttribute('data-theme')==='dark'?'#161b22':'#f7f8fa';
+  ctx.fillRect(0,0,c.width,c.height);
+  let dayMap={};records.forEach(n=>{if(n.date)dayMap[n.date]=(dayMap[n.date]||0)+1;});
+  let today=new Date(),start=new Date(today);start.setDate(start.getDate()-83);
+  let cellW=Math.floor((W-40)/85),cellH=12,gap=3;
+  let max=Math.max(...Object.values(dayMap),1);
+  let colors=['#ebedf0','#9be9a8','#40c463','#30a14e','#216e39'];
+  if(document.documentElement.getAttribute('data-theme')==='dark')colors=['#161b22','#0e4429','#006d32','#26a641','#39d353'];
+  for(let i=0;i<85;i++){
+    let d=new Date(start);d.setDate(d.getDate()+i);
+    let ds=dateStr(d);
+    let val=dayMap[ds]||0;
+    let idx=val===0?0:Math.min(Math.ceil((val/max)*4),4);
+    ctx.fillStyle=colors[idx];
+    ctx.fillRect(20+i*(cellW+gap),10,cellW,cellH);
   }
 }
 
-async function handleAuth() {
-  let email = document.getElementById('authEmail').value.trim();
-  let password = document.getElementById('authPassword').value;
-  if (!email) { showAuthError('请输入邮箱'); return; }
-  if (!password) { showAuthError('请输入密码'); return; }
-  if (password.length < 6) { showAuthError('密码至少6位'); return; }
-  if (authMode === 'register') {
-    let confirm = document.getElementById('authConfirm').value;
-    if (password !== confirm) { showAuthError('两次密码不一致'); return; }
+/* ─── Load notes ─── */
+async function loadNotes(){
+  try{
+    let {data,error}=await sb.from('daily_notes').select('*').order('created_at',{ascending:false});
+    if(error)throw error;
+    notes=data||[];
+    backupLocal(notes);
+  }catch(e){
+    let local=localStorage.getItem('dn_backup');
+    if(local){notes=JSON.parse(local);toast('离线模式','warning');}
+    else notes=[];
   }
-  hideAuthError();
-  let btn = document.getElementById('authBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + (authMode === 'login' ? '登录中...' : '注册中...');
-  try {
-    if (authMode === 'login') {
-      let { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-    } else {
-      let { error } = await supabaseClient.auth.signUp({ email, password });
-      if (error) throw error;
-      showToast('注册成功，请查看邮箱确认', 'success');
+  applyFilters();
+  updateDashboard();
+  loadNotebooks();
+  $('badgeAll').textContent=notes.filter(n=>!n.archived).length;
+  $('badgeArchive').textContent=notes.filter(n=>n.archived).length;
+}
+function backupLocal(d){try{localStorage.setItem('dn_backup',JSON.stringify(d));}catch(e){}}
+
+/* ─── Filters ─── */
+let currentNotebook=null;
+
+function applyFilters(){
+  let filtered=[...notes];
+  if(currentView==='today'){let t=dateStr(new Date());filtered=filtered.filter(n=>n.date===t);}
+  else if(currentView==='favorites')filtered=filtered.filter(n=>n.favorite&&!n.archived);
+  else if(currentView==='archive')filtered=filtered.filter(n=>n.archived);
+  else if(currentView==='notebook')filtered=filtered.filter(n=>n.notebook===currentNotebook&&!n.archived);
+  else filtered=filtered.filter(n=>!n.archived);
+  if(searchTerm){
+    let kw=searchTerm.toLowerCase();
+    if(kw.startsWith('#'))filtered=filtered.filter(n=>(n.tags||[]).some(t=>t.toLowerCase().includes(kw.slice(1))));
+    else if(kw.startsWith('@'))filtered=filtered.filter(n=>(n.notebook||'').toLowerCase().includes(kw.slice(1)));
+    else filtered=filtered.filter(n=>{
+      let t=(n.title||'').toLowerCase(),c=strip(n.content||'').toLowerCase();
+      return t.includes(kw)||c.includes(kw);
+    });
+  }
+  if(currentSort==='pinned')filtered.sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)||b.date.localeCompare(a.date));
+  else if(currentSort==='oldest')filtered.sort((a,b)=>a.date.localeCompare(b.date));
+  else filtered.sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)||b.date.localeCompare(a.date)||(b.created_at||'').localeCompare(a.created_at||''));
+  renderNoteList(filtered);
+  $('listCount').textContent=filtered.length+' 篇';
+}
+function setSort(s){currentSort=s;document.querySelectorAll('.chip').forEach(el=>el.classList.toggle('active',el.dataset.sort===s));applyFilters();}
+function onSearch(){searchTerm=$('searchInput').value.trim();applyFilters();}
+
+/* ─── Render note list ─── */
+function renderNoteList(list){
+  let el=$('noteListScroll');el.innerHTML='';
+  if(!list.length){
+    el.innerHTML='<div class="empty-state"><i class="far fa-file-alt"></i>没有匹配的笔记</div>';return;
+  }
+  let currentDate=null;
+  list.forEach(n=>{
+    if(n.date!==currentDate){currentDate=n.date;
+      let sep=document.createElement('div');sep.style.cssText='padding:12px 4px 4px;font-size:11px;color:var(--text3);font-weight:600;border-bottom:1px solid var(--border);margin-bottom:4px;';
+      sep.textContent=fmtDate(n.date);el.appendChild(sep);
     }
-  } catch (e) {
-    showAuthError(e.message);
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = authMode === 'login' ? '<i class="fas fa-sign-in-alt"></i> 登录' : '<i class="fas fa-user-plus"></i> 注册';
-  }
+    let card=document.createElement('div');
+    card.className='note-card'+(n.id===selectedNoteId?' selected':'');
+    let tags=(n.tags||[]).slice(0,3).map(t=>'<span class="nc-tag">'+esc(t)+'</span>').join('');
+    let nb=n.notebook?'<span class="nc-notebook"><i class="fas fa-book"></i>'+esc(n.notebook)+'</span>':'';
+    let snippet=strip(n.content||'').substring(0,120);
+    card.innerHTML=
+      '<div class="nc-title">'+(n.pinned?'<span class="pin-icon"><i class="fas fa-thumbtack"></i></span>':'')+esc(n.title||'无标题')+'</div>'+
+      (snippet?'<div class="nc-snippet">'+esc(snippet)+'</div>':'')+
+      '<div class="nc-meta">'+
+        (nb||'')+
+        (tags?'<span class="nc-tags">'+tags+'</span>':'')+
+        ((n.tags||[]).length>3?'<span style="font-size:10px;color:var(--text3)">+'+(n.tags.length-3)+'</span>':'')+
+        (n.favorite?'<i class="fas fa-star" style="color:var(--accent);font-size:10px;"></i>':'')+
+      '</div>'+
+      '<div class="nc-actions">'+
+        '<button class="btn-icon'+(n.pinned?' pin-active':'')+'" onclick="event.stopPropagation();togglePin(\''+n.id+'\')"><i class="fas fa-thumbtack"></i></button>'+
+        '<button class="btn-icon" onclick="event.stopPropagation();toggleFav(\''+n.id+'\')"><i class="'+(n.favorite?'fas':'far')+' fa-star"></i></button>'+
+        '<button class="btn-icon" onclick="event.stopPropagation();archiveNote(\''+n.id+'\')"><i class="fas fa-archive"></i></button>'+
+      '</div>';
+    card.onclick=()=>openNote(n.id);
+    el.appendChild(card);
+  });
 }
 
-function showApp(email) {
-  document.getElementById('authPage').classList.remove('show');
-  document.getElementById('appContent').style.display = 'flex';
-  document.getElementById('profileEmail').textContent = email || '';
-  let initial = (email || 'U')[0].toUpperCase();
-  document.getElementById('profileAvatar').textContent = initial;
-  document.getElementById('userAvatarBtn').textContent = initial;
-  if (isDarkMode) applyDarkMode();
+/* ─── Open note ─── */
+function openNote(id){
+  let n=notes.find(x=>x.id===id);if(!n)return;
+  selectedNoteId=n.id;currentNoteId=n.id;
+  if(innerWidth<=900){$('editorPanel').classList.add('show-mobile');}
+  $('editorEmpty').style.display='none';$('editorToolbar').classList.add('show');$('editorBody').classList.add('show');$('editorFooter').classList.add('show');
+  hideDashboard();
+  $('noteTitle').value=n.title||'';
+  $('noteDateDisplay').textContent=n.date;
+  if(!quill){initQuill();}
+  quill.root.innerHTML=n.content||'';
+  renderTagBar(n.tags||[]);
+  updatePinFavBtns(n);
+  applyFilters();
+  updateSaveStatus('saved');
+}
+function closeEditorMobile(){if(innerWidth<=900){$('editorPanel').classList.remove('show-mobile');applyFilters();}}
+$('editorPanel').addEventListener('click',function(e){if(e.target===this&&innerWidth<=900)closeEditorMobile();});
+
+/* ─── Tag bar (editor footer) ─── */
+function renderTagBar(tags){
+  let el=$('tagBar');el.innerHTML='';
+  tags.forEach(t=>{
+    let s=document.createElement('span');s.className='tag-edit';
+    s.innerHTML=esc(t)+' <span class="remove" onclick="event.stopPropagation();removeEditorTag(\''+esc(t).replace(/'/g,"\\'")+'\')">&times;</span>';
+    el.appendChild(s);
+  });
+  let inp=document.createElement('input');inp.className='tag-input-mini';inp.placeholder='+标签';
+  inp.onkeydown=function(e){if(e.key==='Enter'){e.preventDefault();addEditorTag(this.value);this.value='';}};
+  el.appendChild(inp);
+}
+function addEditorTag(tag){tag=tag.trim().replace(/^#+/,'');if(!tag)return;
+  let current=getEditorTags();
+  if(current.includes(tag))return;
+  current.push(tag);renderTagBar(current);autoSave();}
+function removeEditorTag(tag){let c=getEditorTags().filter(t=>t!==tag);renderTagBar(c);autoSave();}
+function getEditorTags(){let t=[];$('tagBar').querySelectorAll('.tag-edit').forEach(el=>t.push(el.childNodes[0].textContent.trim()));return t;}
+
+function updatePinFavBtns(n){
+  $('pinBtn').className='btn-icon'+(n.pinned?' pin-active':'');$('pinBtn').innerHTML='<i class="fas fa-thumbtack"></i>';
+  $('favBtn').innerHTML='<i class="'+(n.favorite?'fas':'far')+' fa-star"></i>';
 }
 
-function showLogin() {
-  document.getElementById('authPage').classList.add('show');
-  document.getElementById('appContent').style.display = 'none';
-  notesCache = [];
-  currentNoteId = null;
-  closeEditor();
-  switchPage('notes');
-  if (quill) clearForm();
+/* ─── Pin / Fav / Archive ─── */
+async function togglePin(id,e){if(e)e.stopPropagation();
+  let n=notes.find(x=>x.id===id);if(!n)return;
+  let v=!n.pinned;
+  try{await sb.from('daily_notes').update({pinned:v}).eq('id',id);n.pinned=v;toast(v?'已置顶':'已取消置顶','success');applyFilters();updatePinFavBtns(n);}catch(e){toast('操作失败','error');}
+}
+async function togglePinCurrent(){
+  let n=notes.find(x=>x.id===currentNoteId);if(!n)return;
+  let v=!n.pinned;
+  try{await sb.from('daily_notes').update({pinned:v}).eq('id',currentNoteId);n.pinned=v;toast(v?'已置顶':'已取消置顶','success');updatePinFavBtns(n);applyFilters();}catch(e){toast('操作失败','error');}
+}
+async function toggleFav(id,e){if(e)e.stopPropagation();
+  let n=notes.find(x=>x.id===id);if(!n)return;
+  let v=!n.favorite;
+  try{await sb.from('daily_notes').update({favorite:v}).eq('id',id);n.favorite=v;applyFilters();if(n.id===currentNoteId)updatePinFavBtns(n);}catch(e){toast('操作失败','error');}
+}
+async function toggleFavCurrent(){
+  let n=notes.find(x=>x.id===currentNoteId);if(!n)return;
+  let v=!n.favorite;
+  try{await sb.from('daily_notes').update({favorite:v}).eq('id',currentNoteId);n.favorite=v;updatePinFavBtns(n);applyFilters();}catch(e){toast('操作失败','error');}
+}
+async function archiveNote(id,e){if(e)e.stopPropagation();
+  try{await sb.from('daily_notes').update({archived:true}).eq('id',id);toast('已归档','success');
+    if(currentNoteId===id){clearEditor();}loadNotes();}catch(e){toast('归档失败','error');}
+}
+async function archiveCurrentNote(){
+  if(!currentNoteId)return;
+  try{await sb.from('daily_notes').update({archived:true}).eq('id',currentNoteId);toast('已归档','success');clearEditor();loadNotes();}catch(e){toast('归档失败','error');}
+}
+function exportCurrentNote(){
+  let n=notes.find(x=>x.id===currentNoteId);if(!n)return;
+  let title=n.title||'无标题',content=strip(n.content||''),tags=(n.tags||[]).map(t=>'#'+t).join(' ');
+  let md='# '+title+'\n\n日期：'+n.date+'\n标签：'+(tags||'无')+'\n\n---\n\n'+content;
+  downloadMd(md,title+'_'+n.date+'.md');toast('已导出','success');
+}
+function exportAllNotes(){
+  $('userMenu').classList.remove('show');
+  if(!notes.length){toast('没有笔记可导出','warning');return;}
+  let md='# 笔记导出\n\n导出时间：'+new Date().toLocaleString()+'\n共 '+notes.length+' 篇\n\n---\n\n';
+  notes.forEach(n=>{let t=n.title||'无标题',c=strip(n.content||''),tags=(n.tags||[]).map(t=>'#'+t).join(' ');
+    md+='## '+t+'\n\n日期：'+n.date+'\n标签：'+(tags||'无')+'\n\n'+c+'\n\n---\n\n';});
+  downloadMd(md,'notes_export_'+dateStr(new Date())+'.md');toast('已导出 '+notes.length+' 篇','success');
+}
+function downloadMd(content,name){
+  let b=new Blob([content],{type:'text/markdown;charset=utf-8'}),u=URL.createObjectURL(b);
+  let a=document.createElement('a');a.href=u;a.download=name;a.click();URL.revokeObjectURL(u);
 }
 
-async function signOut() {
-  let { error } = await supabaseClient.auth.signOut();
-  if (error) showToast('退出失败：' + error.message, 'error');
+/* ─── Save ─── */
+async function autoSave(){
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>{if(currentNoteId)saveNote();},2000);
+  updateSaveStatus('unsaved');
+}
+function updateSaveStatus(t){
+  let el=$('saveStatus');
+  if(t==='saving'){el.className='save-status saving';el.innerHTML='<i class="fas fa-spinner fa-spin"></i> 保存中';}
+  else if(t==='saved'){el.className='save-status saved';el.innerHTML='<i class="fas fa-check-circle"></i> 已保存';}
+  else if(t==='unsaved'){el.className='save-status saving';el.innerHTML='<i class="fas fa-pen"></i> 未保存';}
 }
 
-/* ==================== Dark Mode ==================== */
-function applyDarkMode() {
-  document.documentElement.setAttribute('data-theme', 'dark');
-  document.getElementById('darkModeBtn').innerHTML = '<i class="fas fa-sun"></i>';
-  let toggle = document.getElementById('darkModeToggle');
-  if (toggle) toggle.classList.add('on');
-}
-function applyLightMode() {
-  document.documentElement.removeAttribute('data-theme');
-  document.getElementById('darkModeBtn').innerHTML = '<i class="fas fa-moon"></i>';
-  let toggle = document.getElementById('darkModeToggle');
-  if (toggle) toggle.classList.remove('on');
-}
-function toggleDarkMode() {
-  isDarkMode = !isDarkMode;
-  localStorage.setItem('daily_notes_dark_mode', isDarkMode);
-  if (isDarkMode) applyDarkMode(); else applyLightMode();
-}
-
-/* ==================== Page Switching ==================== */
-function switchPage(page) {
-  document.querySelectorAll('.tab-page').forEach(el => el.classList.remove('active'));
-  document.getElementById('page' + page.charAt(0).toUpperCase() + page.slice(1)).classList.add('active');
-  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-  document.querySelector('.tab-btn[data-page="' + page + '"]').classList.add('active');
-  if (page === 'notes') {
-    applyFilters();
-    document.getElementById('fabBtn').style.display = 'flex';
-  } else {
-    document.getElementById('fabBtn').style.display = 'none';
-  }
-  if (page === 'tags') renderTagCloud();
-  if (page === 'search') { document.getElementById('searchInput').focus(); onSearchInput(); }
-  if (page === 'profile') updateProfileStats();
-}
-
-/* ==================== Editor ==================== */
-function openEditor(noteId) {
-  currentNoteId = null;
-  clearForm();
-  if (noteId) {
-    let note = notesCache.find(n => n.id === noteId);
-    if (note) {
-      currentNoteId = noteId;
-      document.getElementById('noteDate').value = note.date;
-      document.getElementById('noteTitle').value = note.title || '';
-      if (quill) quill.root.innerHTML = note.content || '';
-      renderTags(note.tags || []);
-      document.getElementById('editorTitle').textContent = '编辑笔记';
-    }
-  }
-  document.getElementById('editorOverlay').classList.add('show');
-  document.getElementById('editorPanel').classList.add('show');
-  document.getElementById('fabBtn').style.display = 'none';
-  setTimeout(() => document.getElementById('noteTitle').focus(), 400);
-}
-
-function closeEditor() {
-  // Auto-save draft
-  let content = quill ? quill.root.innerHTML : '';
-  if (content && content !== '<p><br></p>') {
-    let draft = {
-      date: document.getElementById('noteDate').value,
-      title: document.getElementById('noteTitle').value,
-      content: content,
-      tags: getCurrentTags(),
-      noteId: currentNoteId
-    };
-    localStorage.setItem('daily_notes_draft', JSON.stringify(draft));
-  }
-  document.getElementById('editorOverlay').classList.remove('show');
-  document.getElementById('editorPanel').classList.remove('show');
-  setTimeout(() => {
-    if (document.querySelector('.tab-page.active')?.id === 'pageNotes') {
-      document.getElementById('fabBtn').style.display = 'flex';
-    }
-  }, 350);
-}
-
-/* ==================== Save ==================== */
-let saveLock = false;
-
-async function saveNote() {
-  if (saveLock) return;
-  let date = document.getElementById('noteDate').value;
-  let title = document.getElementById('noteTitle').value.trim();
-  let content = quill ? quill.root.innerHTML : '';
-  let plainContent = stripHtml(content).trim();
-  if (!title && !plainContent) { showToast('请填写笔记内容', 'warning'); return; }
-  if (!title) title = '无标题';
-  let tags = getCurrentTags();
-  let btn = document.getElementById('saveBtn');
-  saveLock = true;
-  btn.disabled = true;
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 保存';
-  updateSaveStatus('saving');
-  try {
-    if (currentNoteId) {
-      let { error } = await supabaseClient
-        .from('daily_notes')
-        .update({ title, content, date, tags, updated_at: new Date().toISOString() })
-        .eq('id', currentNoteId);
-      if (error) throw error;
-    } else {
-      let { data: { user } } = await supabaseClient.auth.getUser();
-      let { data, error } = await supabaseClient
-        .from('daily_notes')
-        .insert({ title, content, date, tags, user_id: user.id })
-        .select();
-      if (error) throw error;
-      currentNoteId = data[0].id;
-    }
-    showToast('保存成功', 'success');
+let saving=false;
+async function saveNote(){
+  if(!currentNoteId||saving)return;
+  let title=$('noteTitle').value.trim()||'无标题';
+  let content=quill?quill.root.innerHTML:'';
+  let tags=getEditorTags();
+  saving=true;updateSaveStatus('saving');
+  try{
+    let {error}=await sb.from('daily_notes').update({title,content,tags,updated_at:new Date().toISOString()}).eq('id',currentNoteId);
+    if(error)throw error;
     updateSaveStatus('saved');
-    btn.innerHTML = '<i class="fas fa-check"></i> 保存';
-    localStorage.removeItem('daily_notes_draft');
-    await loadNotes();
-    closeEditor();
-  } catch (e) {
-    showToast('保存失败：' + e.message, 'error');
-    updateSaveStatus('error', e.message);
-    btn.innerHTML = '<i class="fas fa-check"></i> 保存';
-  } finally {
-    btn.disabled = false;
-    saveLock = false;
-  }
+    let n=notes.find(x=>x.id===currentNoteId);if(n){n.title=title;n.content=content;n.tags=tags;}
+    applyFilters();updateDashboard();
+  }catch(e){toast('保存失败','error');updateSaveStatus('error');}
+  finally{saving=false;}
 }
 
-function updateSaveStatus(type, msg) {
-  let el = document.getElementById('saveStatus');
-  if (type === 'saving') {
-    el.className = 'save-status saving';
-    el.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 保存中...';
-  } else if (type === 'saved') {
-    el.className = 'save-status saved';
-    el.innerHTML = '<i class="fas fa-check-circle"></i> 已保存';
-  } else if (type === 'unsaved') {
-    el.className = 'save-status saving';
-    el.innerHTML = '<i class="fas fa-pen"></i> 未保存';
-  } else if (type === 'error') {
-    el.className = 'save-status error';
-    el.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + (msg || '保存失败');
-  }
-}
-
-/* ==================== Pin / Archive / Delete ==================== */
-async function togglePin(id, event) {
-  if (event) event.stopPropagation();
-  let note = notesCache.find(n => n.id === id);
-  if (!note) return;
-  let newVal = !note.pinned;
-  try {
-    let { error } = await supabaseClient.from('daily_notes').update({ pinned: newVal }).eq('id', id);
-    if (error) throw error;
-    note.pinned = newVal;
-    showToast(newVal ? '已置顶' : '已取消置顶', 'success');
-    await loadNotes();
-  } catch (e) { showToast('操作失败：' + e.message, 'error'); }
-}
-
-async function archiveNote(id, event) {
-  if (event) event.stopPropagation();
-  showModal('归档笔记', '确定归档此笔记？', '归档', async function() {
-    confirmCallback = null;
-    try {
-      let { error } = await supabaseClient.from('daily_notes').update({ archived: true }).eq('id', id);
-      if (error) throw error;
-      showToast('已归档', 'success');
-      await loadNotes();
-    } catch (e) { showToast('归档失败：' + e.message, 'error'); }
-  });
-}
-
-async function restoreNote(id, event) {
-  if (event) event.stopPropagation();
-  try {
-    let { error } = await supabaseClient.from('daily_notes').update({ archived: false }).eq('id', id);
-    if (error) throw error;
-    showToast('已恢复', 'success');
-    await loadNotes();
-  } catch (e) { showToast('恢复失败：' + e.message, 'error'); }
-}
-
-async function deleteNotePermanently(id, event) {
-  if (event) event.stopPropagation();
-  showModal('永久删除', '确定要永久删除此笔记？不可恢复！', '永久删除', async function() {
-    confirmCallback = null;
-    try {
-      let { error } = await supabaseClient.from('daily_notes').delete().eq('id', id);
-      if (error) throw error;
-      showToast('已永久删除', 'success');
-      await loadNotes();
-    } catch (e) { showToast('删除失败：' + e.message, 'error'); }
-  });
-}
-
-/* ==================== Export ==================== */
-function exportNote(note) {
-  let title = note.title || '无标题';
-  let date = note.date;
-  let content = stripHtml(note.content || '');
-  let tags = (note.tags || []).map(t => '#' + t).join(' ');
-  let md = '# ' + title + '\n\n日期：' + date + '\n标签：' + (tags || '无') + '\n\n---\n\n' + content;
-  let blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
-  let url = URL.createObjectURL(blob);
-  let a = document.createElement('a');
-  a.href = url;
-  a.download = title + '_' + date + '.md';
-  a.click();
-  URL.revokeObjectURL(url);
-  showToast('已导出', 'success');
-}
-
-function exportAllNotes() {
-  if (!notesCache.length) { showToast('没有笔记可导出', 'warning'); return; }
-  let md = '# 笔记导出\n\n导出时间：' + new Date().toLocaleString() + '\n共 ' + notesCache.length + ' 篇笔记\n\n---\n\n';
-  notesCache.forEach((note, i) => {
-    let title = note.title || '无标题';
-    let date = note.date;
-    let content = stripHtml(note.content || '');
-    let tags = (note.tags || []).map(t => '#' + t).join(' ');
-    md += '## ' + title + '\n\n日期：' + date + '\n标签：' + (tags || '无') + '\n\n' + content + '\n\n---\n\n';
-  });
-  let blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
-  let url = URL.createObjectURL(blob);
-  let a = document.createElement('a');
-  a.href = url;
-  a.download = 'notes_export_' + new Date().toISOString().slice(0, 10) + '.md';
-  a.click();
-  URL.revokeObjectURL(url);
-  showToast('已导出全部笔记 (' + notesCache.length + ' 篇)', 'success');
-}
-
-/* ==================== Render Timeline ==================== */
-function renderNotes(records) {
-  let container = document.getElementById('notesTimeline');
-  if (!records || records.length === 0) {
-    let msg = currentTab === 'pinned' ? '还没有置顶的笔记' : currentTab === 'archived' ? '没有归档的笔记' : '暂无笔记，点击右下角 + 开始记录';
-    container.innerHTML = '<div class="empty-state"><i class="far fa-sticky-note"></i><p>' + msg + '</p></div>';
-    return;
-  }
-  // Group by date
-  let groups = {};
-  records.forEach(n => {
-    if (!groups[n.date]) groups[n.date] = [];
-    groups[n.date].push(n);
-  });
-  let sortedDates = Object.keys(groups).sort().reverse();
-  let html = '';
-  sortedDates.forEach(date => {
-    let notes = groups[date];
-    let hasPinned = notes.some(n => n.pinned);
-    html += '<div class="date-group">';
-    html += '<div class="date-label"><i class="far fa-calendar-alt"></i> ' + fmtDateFull(date) +
-      ' <span class="count">' + notes.length + ' 篇</span>' +
-      (hasPinned ? ' <span style="color:var(--warning);font-size:11px;"><i class="fas fa-thumbtack"></i></span>' : '') +
-      '</div>';
-    notes.forEach(note => {
-      let plainText = stripHtml(note.content);
-      let snippet = plainText.substring(0, 200);
-      if (plainText.length > 200) snippet += '...';
-      let tagsHtml = (note.tags || []).map(t =>
-        '<span class="tag" onclick="event.stopPropagation();switchPage(\'tags\');selectTag(\'' + escapeHtml(t).replace(/'/g, "\\'") + '\')">' + escapeHtml(t) + '</span>'
-      ).join('');
-      let readingTime = Math.max(1, Math.ceil(plainText.length / 500));
-      let cardClass = 'note-card' + (note.archived ? ' archived' : '');
-      html += '<div class="' + cardClass + '" onclick="openEditor(\'' + note.id + '\')">' +
-        '<div class="note-card-header">' +
-          '<div class="note-card-title">' +
-            (note.pinned ? '<span style="color:var(--warning);font-size:12px;"><i class="fas fa-thumbtack"></i></span> ' : '') +
-            escapeHtml(note.title || '无标题') +
-          '</div>' +
-          '<span class="note-card-time">' + readingTime + '分钟</span>' +
-        '</div>' +
-        (snippet ? '<div class="note-card-snippet">' + escapeHtml(snippet) + '</div>' : '') +
-        (tagsHtml ? '<div class="note-card-tags">' + tagsHtml + '</div>' : '') +
-        '<div class="note-card-footer">' +
-          '<div class="note-card-actions">' +
-            '<button class="note-card-action pin' + (note.pinned ? ' active' : '') + '" onclick="togglePin(\'' + note.id + '\', event)" title="置顶"><i class="fas fa-thumbtack"></i></button>' +
-            (note.archived
-              ? '<button class="note-card-action" onclick="restoreNote(\'' + note.id + '\', event)" title="恢复"><i class="fas fa-undo-alt"></i></button>' +
-                '<button class="note-card-action danger" onclick="deleteNotePermanently(\'' + note.id + '\', event)" title="删除"><i class="fas fa-trash-alt"></i></button>'
-              : '<button class="note-card-action" onclick="exportNote(notesCache.find(n=>n.id===\'' + note.id + '\'))" title="导出"><i class="fas fa-download"></i></button>' +
-                '<button class="note-card-action" onclick="archiveNote(\'' + note.id + '\', event)" title="归档"><i class="fas fa-archive"></i></button>'
-            ) +
-          '</div>' +
-          '<span style="font-size:11px;color:var(--text-muted);">' + date.slice(5) + '</span>' +
-        '</div>' +
-      '</div>';
-    });
-    html += '</div>';
-  });
-  container.innerHTML = html;
-  updateProfileStats();
-}
-
-/* ==================== Tabs ==================== */
-function switchTab(tab) {
-  currentTab = tab;
-  document.querySelectorAll('#notesTabBar .notes-tab').forEach(el => el.classList.remove('active'));
-  document.querySelector('#notesTabBar .notes-tab[data-tab="' + tab + '"]').classList.add('active');
-  applyFilters();
-}
-
-/* ==================== Search ==================== */
-let searchTimer = null;
-
-function onSearchInput() {
-  let kw = document.getElementById('searchInput').value.trim();
-  let clearBtn = document.getElementById('searchClearBtn');
-  if (kw) clearBtn.classList.add('visible'); else clearBtn.classList.remove('visible');
-  clearTimeout(searchTimer);
-  searchTimer = setTimeout(() => {
-    searchKeyword = kw;
-    performSearch();
-  }, 200);
-}
-
-function clearSearch() {
-  document.getElementById('searchInput').value = '';
-  document.getElementById('searchClearBtn').classList.remove('visible');
-  searchKeyword = '';
-  document.getElementById('searchResults').innerHTML = '';
-}
-
-function performSearch() {
-  let container = document.getElementById('searchResults');
-  if (!searchKeyword) { container.innerHTML = '<div class="empty-state"><i class="fas fa-search"></i><p>输入关键词搜索笔记</p></div>'; return; }
-  let kw = searchKeyword.toLowerCase();
-  let isTagSearch = kw.startsWith('#');
-  let results = notesCache.filter(n => {
-    if (isTagSearch) {
-      let tagKw = kw.slice(1);
-      return (n.tags || []).some(t => t.toLowerCase().includes(tagKw));
+/* ─── Editor ─── */
+function initQuill(){
+  if(quill)return;
+  quill=new Quill('#editorContainer',{
+    theme:'snow',placeholder:'开始书写...',
+    modules:{
+      toolbar:[
+        [{header:[1,2,3,false]}],['bold','italic','underline','strike'],
+        [{list:'ordered'},{list:'bullet'},{list:'check'}],
+        ['blockquote','code-block'],[{script:'sub'},{script:'super'}],
+        [{indent:'-1'},{indent:'+1'}],[{color:[]},{background:[]}],
+        ['link','image'],['clean']
+      ]
     }
-    let title = (n.title || '').toLowerCase();
-    let content = stripHtml(n.content || '').toLowerCase();
-    return title.includes(kw) || content.includes(kw);
   });
-  results.sort((a, b) => b.date.localeCompare(a.date));
-  if (results.length === 0) {
-    container.innerHTML = '<div class="empty-state"><i class="far fa-frown"></i><p>没有找到匹配的笔记</p></div>';
-    return;
-  }
-  let html = '<div style="font-size:13px;color:var(--text-muted);margin-bottom:10px;">找到 ' + results.length + ' 条结果</div>';
-  results.forEach(note => {
-    let plainText = stripHtml(note.content);
-    let snippet = plainText.substring(0, 150);
-    if (plainText.length > 150) snippet += '...';
-    let tagsHtml = (note.tags || []).map(t => '<span class="tag" style="font-size:10px;">' + escapeHtml(t) + '</span>').join('');
-    html += '<div class="note-card" onclick="switchPage(\'notes\');openEditor(\'' + note.id + '\')">' +
-      '<div class="note-card-header">' +
-        '<div class="note-card-title" style="font-size:15px;">' +
-          (note.pinned ? '<span style="color:var(--warning);font-size:10px;"><i class="fas fa-thumbtack"></i></span> ' : '') +
-          escapeHtml(note.title || '无标题') +
-        '</div>' +
-        '<span class="note-card-time">' + note.date.slice(5) + '</span>' +
-      '</div>' +
-      (snippet ? '<div class="note-card-snippet" style="font-size:13px;">' + escapeHtml(snippet) + '</div>' : '') +
-      (tagsHtml ? '<div class="note-card-tags">' + tagsHtml + '</div>' : '') +
-    '</div>';
-  });
-  container.innerHTML = html;
-}
-
-/* ==================== Apply Filters ==================== */
-function applyFilters() {
-  let filtered = [...notesCache];
-  if (currentTab === 'active') filtered = filtered.filter(n => !n.archived);
-  else if (currentTab === 'pinned') filtered = filtered.filter(n => n.pinned && !n.archived);
-  else if (currentTab === 'archived') filtered = filtered.filter(n => n.archived);
-  filtered.sort((a, b) => {
-    if (a.pinned && !b.pinned) return -1;
-    if (!a.pinned && b.pinned) return 1;
-    return b.date.localeCompare(a.date) || new Date(b.created_at || 0) - new Date(a.created_at || 0);
-  });
-  renderNotes(filtered);
-}
-
-/* ==================== Tag Cloud ==================== */
-function renderTagCloud() {
-  let tagMap = {};
-  notesCache.filter(n => !n.archived).forEach(n => {
-    (n.tags || []).forEach(t => { if (!tagMap[t]) tagMap[t] = { count: 0, notes: [] }; tagMap[t].count++; tagMap[t].notes.push(n); });
-  });
-  let container = document.getElementById('tagCloud');
-  let keys = Object.keys(tagMap).sort();
-  if (keys.length === 0) {
-    container.innerHTML = '<div class="empty-state" style="padding:30px 0;"><i class="fas fa-tags"></i><p>还没有标签</p></div>';
-    return;
-  }
-  container.innerHTML = keys.map(t =>
-    '<div class="tag-cloud-item" onclick="selectTag(\'' + escapeHtml(t).replace(/'/g, "\\'") + '\')">' +
-      '<i class="fas fa-hashtag"></i> ' + escapeHtml(t) +
-      ' <span class="count">' + tagMap[t].count + '</span>' +
-    '</div>'
-  ).join('');
-}
-
-function selectTag(tag) {
-  selectedTag = tag;
-  document.getElementById('selectedTagName').textContent = '#' + tag;
-  document.getElementById('tagNotesSection').style.display = 'block';
-  let filtered = notesCache.filter(n => !n.archived && (n.tags || []).includes(tag));
-  filtered.sort((a, b) => b.date.localeCompare(a.date));
-  let container = document.getElementById('tagFilteredNotes');
-  if (!filtered.length) { container.innerHTML = '<div class="empty-state"><p>此标签暂无笔记</p></div>'; return; }
-  let html = '';
-  filtered.forEach(note => {
-    let snippet = stripHtml(note.content).substring(0, 150);
-    html += '<div class="note-card" onclick="switchPage(\'notes\');openEditor(\'' + note.id + '\')">' +
-      '<div class="note-card-header">' +
-        '<div class="note-card-title" style="font-size:15px;">' + escapeHtml(note.title || '无标题') + '</div>' +
-        '<span class="note-card-time">' + note.date.slice(5) + '</span>' +
-      '</div>' +
-      (snippet ? '<div class="note-card-snippet" style="font-size:13px;">' + escapeHtml(snippet) + '</div>' : '') +
-    '</div>';
-  });
-  container.innerHTML = html;
-}
-
-function clearSelectedTag() {
-  selectedTag = null;
-  document.getElementById('tagNotesSection').style.display = 'none';
-}
-
-/* ==================== Profile Stats ==================== */
-function updateProfileStats() {
-  let allNotes = notesCache.filter(n => !n.archived);
-  document.getElementById('statNotes').textContent = allNotes.length;
-  let totalWords = 0;
-  allNotes.forEach(n => totalWords += stripHtml(n.content || '').length);
-  document.getElementById('statWords').textContent = totalWords;
-  let days = [...new Set(allNotes.map(n => n.date))].sort().reverse();
-  let streak = 0;
-  if (days.length > 0) {
-    let today = new Date().toISOString().slice(0, 10);
-    let checkDate = new Date(today + 'T00:00:00');
-    for (let i = 0; i < days.length; i++) {
-      let d = new Date(days[i] + 'T00:00:00');
-      let diff = Math.round((checkDate - d) / 86400000);
-      if (diff === streak) streak++; else break;
+  quill.on('text-change',()=>{if(currentNoteId)autoSave();});
+  $('noteTitle').addEventListener('input',()=>{if(currentNoteId)autoSave();});
+  $('editorContainer').addEventListener('paste',function(e){
+    let items=(e.clipboardData||e.originalEvent?.clipboardData)?.items;
+    if(!items)return;
+    for(let item of items){
+      if(item.type.indexOf('image')===0){
+        e.preventDefault();
+        let blob=item.getAsFile(),reader=new FileReader();
+        reader.onload=ev=>{
+          let range=quill.getSelection();
+          if(range)quill.clipboard.dangerouslyPasteHTML(range.index,'<img src="'+ev.target.result+'" alt="" style="max-width:100%">');
+          else quill.clipboard.dangerouslyPasteHTML(quill.getLength(),'<img src="'+ev.target.result+'" alt="" style="max-width:100%">');
+          if(currentNoteId)autoSave();
+        };
+        reader.readAsDataURL(blob);return;
+      }
     }
-  }
-  document.getElementById('statStreak').textContent = streak;
+  });
+}
+function clearEditor(){
+  currentNoteId=null;selectedNoteId=null;
+  $('editorEmpty').style.display='flex';$('editorToolbar').classList.remove('show');$('editorBody').classList.remove('show');$('editorFooter').classList.remove('show');
+  if(quill)quill.root.innerHTML='';$('noteTitle').value='';$('tagBar').innerHTML='';
+  showDashboard();
+  closeMobileEditor();
+}
+function closeMobileEditor(){if(innerWidth<=900)$('editorPanel').classList.remove('show-mobile');}
+
+/* ─── Quick Capture ─── */
+function showQuickCapture(){
+  $('qcModal').classList.add('show');
+  $('qcTitle').value='';
+  if(!qcQuill){
+    qcQuill=new Quill('#qcEditor',{theme:'snow',placeholder:'写点什么...',modules:{toolbar:[['bold','italic','underline'],[{list:'bullet'}],['link']]}});
+  }else qcQuill.root.innerHTML='';
+  $('qcTags').innerHTML='';
+  // Populate notebook select
+  let sel=$('qcNotebook');sel.innerHTML='<option value="">无笔记本</option>';
+  notebooks.forEach(nb=>{let o=document.createElement('option');o.value=nb;o.textContent=nb;sel.appendChild(o);});
+  setTimeout(()=>$('qcTitle').focus(),100);
+}
+function hideQuickCapture(){$('qcModal').classList.remove('show');}
+let qcTags=[];
+function addQcTag(){
+  let inp=$('qcTagInput'),tag=inp.value.trim().replace(/^#+/,'');
+  if(!tag)return;
+  if(qcTags.includes(tag)){inp.value='';return;}
+  qcTags.push(tag);
+  let el=$('qcTags');
+  let s=document.createElement('span');s.className='qc-tag';
+  s.innerHTML=esc(tag)+' <span class="remove" onclick="this.parentElement.remove();qcTags=qcTags.filter(t=>t!==\''+esc(tag).replace(/'/g,"\\'")+'\')">&times;</span>';
+  el.appendChild(s);
+  inp.value='';inp.focus();
+}
+async function saveQuickCapture(){
+  let title=$('qcTitle').value.trim()||'无标题';
+  let content=qcQuill?qcQuill.root.innerHTML:'';
+  let tags=[...qcTags];
+  let notebook=$('qcNotebook').value;
+  if(!strip(content).trim()&&!title){toast('请输入内容','warning');return;}
+  let btn=$('qcModal').querySelector('.btn-primary');btn.disabled=true;btn.textContent='保存中...';
+  try{
+    let {data:{user:u}}=await sb.auth.getUser();
+    let {error}=await sb.from('daily_notes').insert({title,content,date:dateStr(new Date()),tags,user_id:u.id,notebook:notebook||null});
+    if(error)throw error;
+    toast('已保存','success');hideQuickCapture();loadNotes();
+  }catch(e){toast('保存失败：'+e.message,'error');}
+  finally{btn.disabled=false;btn.textContent='保存';qcTags=[];}
 }
 
-/* ==================== Modal ==================== */
-function showModal(title, text, confirmText, callback) {
-  document.getElementById('modalTitle').textContent = title;
-  document.getElementById('modalText').textContent = text;
-  document.getElementById('modalConfirmBtn').textContent = confirmText || '确定';
-  document.getElementById('confirmModal').classList.add('show');
-  confirmCallback = callback;
-}
-function closeModal() {
-  document.getElementById('confirmModal').classList.remove('show');
-  if (confirmCallback) { confirmCallback(); confirmCallback = null; }
-}
+/* ─── User menu ─── */
+function toggleUserMenu(){$('userMenu').classList.toggle('show');}
+document.addEventListener('click',function(e){let m=$('userMenu');if(!e.target.closest('.user-avatar')&&!e.target.closest('.user-dropdown'))m.classList.remove('show');});
 
-/* ==================== Backup ==================== */
-function backupToLocal(data) {
-  try { localStorage.setItem('daily_notes_backup', JSON.stringify(data)); } catch (e) {}
-}
-function loadFromLocal() {
-  try { let d = localStorage.getItem('daily_notes_backup'); return d ? JSON.parse(d) : null; } catch (e) { return null; }
-}
-
-/* ==================== Load ==================== */
-async function loadNotes() {
-  try {
-    let { data, error } = await supabaseClient.from('daily_notes').select('*').order('date', { ascending: false });
-    if (error) throw error;
-    notesCache = data || [];
-    backupToLocal(notesCache);
-  } catch (e) {
-    let local = loadFromLocal();
-    if (local) { notesCache = local; showToast('网络不可用，显示本地缓存', 'warning'); }
-    else { notesCache = []; showToast('无法加载数据', 'error'); }
-  }
-  applyFilters();
-  if (document.getElementById('pageTags').classList.contains('active')) renderTagCloud();
-}
-
-/* ==================== Image Paste ==================== */
-function handleImagePaste(e) {
-  let items = (e.clipboardData || e.originalEvent.clipboardData).items;
-  for (let item of items) {
-    if (item.type.indexOf('image') === 0) {
-      e.preventDefault();
-      let blob = item.getAsFile();
-      let reader = new FileReader();
-      reader.onload = function(ev) {
-        let img = '<img src="' + ev.target.result + '" alt="粘贴图片" style="max-width:100%;" />';
-        let range = quill.getSelection();
-        if (range) quill.clipboard.dangerouslyPasteHTML(range.index, img);
-        else quill.clipboard.dangerouslyPasteHTML(quill.getLength(), img);
-      };
-      reader.readAsDataURL(blob);
-      return;
-    }
-  }
-}
-
-/* ==================== Keyboard ==================== */
-document.addEventListener('keydown', function(e) {
-  if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveNote(); }
-  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); saveNote(); }
-  if (e.key === 'Escape') {
-    if (document.getElementById('editorPanel').classList.contains('show')) closeEditor();
-  }
+/* ─── Keyboard shortcuts ─── */
+document.addEventListener('keydown',function(e){
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.isContentEditable)return;
+  if($('qcModal').classList.contains('show')){if(e.key==='Escape')hideQuickCapture();return;}
+  if(e.key==='n'||e.key==='N'){e.preventDefault();showQuickCapture();}
+  if(e.key==='Escape'&&currentNoteId&&innerWidth<=900)closeMobileEditor();
+  if((e.ctrlKey||e.metaKey)&&e.key==='s'){e.preventDefault();if(currentNoteId)saveNote();}
+  if(e.key==='d'&&(e.ctrlKey||e.metaKey)){e.preventDefault();toggleDarkMode();}
 });
 
-/* ==================== Tag Input ==================== */
-document.addEventListener('DOMContentLoaded', function() {
-  document.getElementById('tagInput').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') { e.preventDefault(); addTag(); }
-  });
-});
-
-/* ==================== Init ==================== */
-document.addEventListener('DOMContentLoaded', async function() {
-  if (isDarkMode) applyDarkMode();
-
-  supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-  let { data: { session } } = await supabaseClient.auth.getSession();
-
-  if (session) {
-    quill = new Quill('#editorContainer', {
-      theme: 'snow',
-      placeholder: '开始记录今天的内容...',
-      modules: {
-        toolbar: [
-          [{ 'header': [1, 2, 3, false] }],
-          ['bold', 'italic', 'underline', 'strike'],
-          [{ 'list': 'ordered'}, { 'list': 'bullet' }, { 'list': 'check' }],
-          ['blockquote', 'code-block'],
-          [{ 'script': 'sub'}, { 'script': 'super' }],
-          [{ 'indent': '-1'}, { 'indent': '+1' }],
-          [{ 'color': [] }, { 'background': [] }],
-          ['link', 'image'],
-          ['clean']
-        ]
-      }
-    });
-    document.getElementById('noteDate').value = new Date().toISOString().slice(0, 10);
-    showApp(session.user.email);
-    loadNotes();
-    quill.on('text-change', function() {
-      let content = quill.root.innerHTML;
-      if (content && content !== '<p><br></p>' && document.getElementById('editorPanel').classList.contains('show')) {
-        updateSaveStatus('unsaved');
-      }
-    });
-    document.getElementById('editorContainer').addEventListener('paste', handleImagePaste);
-    // Restore draft
-    try {
-      let draft = JSON.parse(localStorage.getItem('daily_notes_draft'));
-      if (draft && draft.content && draft.content !== '<p><br></p>') {
-        showToast('有未保存的草稿', 'info');
-      }
-    } catch(e) {}
-  } else {
-    showLogin();
-  }
-
-  supabaseClient.auth.onAuthStateChange((event, session) => {
-    if (event === 'SIGNED_IN' && session) {
-      if (!quill) {
-        quill = new Quill('#editorContainer', {
-          theme: 'snow',
-          placeholder: '开始记录今天的内容...',
-          modules: {
-            toolbar: [
-              [{ 'header': [1, 2, 3, false] }],
-              ['bold', 'italic', 'underline', 'strike'],
-              [{ 'list': 'ordered'}, { 'list': 'bullet' }, { 'list': 'check' }],
-              ['blockquote', 'code-block'],
-              [{ 'script': 'sub'}, { 'script': 'super' }],
-              [{ 'indent': '-1'}, { 'indent': '+1' }],
-              [{ 'color': [] }, { 'background': [] }],
-              ['link', 'image'],
-              ['clean']
-            ]
-          }
-        });
-        document.getElementById('noteDate').value = new Date().toISOString().slice(0, 10);
-        quill.on('text-change', function() {
-          let content = quill.root.innerHTML;
-          if (content && content !== '<p><br></p>' && document.getElementById('editorPanel').classList.contains('show')) {
-            updateSaveStatus('unsaved');
-          }
-        });
-        document.getElementById('editorContainer').addEventListener('paste', handleImagePaste);
-      }
-      showApp(session.user.email);
-      loadNotes();
-    } else if (event === 'SIGNED_OUT') {
-      showLogin();
-    }
+/* ─── Init ─── */
+document.addEventListener('DOMContentLoaded',async function(){
+  sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+  let {data:{session:s}}=await sb.auth.getSession();
+  if(s){session=s;user=s.user;showApp();}
+  else showLogin();
+  sb.auth.onAuthStateChange((ev,s)=>{
+    if(ev==='SIGNED_IN'&&s){session=s;user=s.user;if(!quill)initQuill();showApp();}
+    else if(ev==='SIGNED_OUT'){showLogin();}
   });
 });
 </script>
