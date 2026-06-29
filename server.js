@@ -28,8 +28,33 @@ async function initDb() {
       name TEXT NOT NULL,
       color TEXT DEFAULT '#6366f1',
       icon TEXT DEFAULT '',
+      type TEXT DEFAULT 'expense',
       sort_order INTEGER DEFAULT 0,
       created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
+  // 为旧表添加 type 列（如不存在）
+  await pool.query(`ALTER TABLE categories ADD COLUMN IF NOT EXISTS type TEXT DEFAULT 'expense'`);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS transactions (
+      id TEXT PRIMARY KEY,
+      type TEXT NOT NULL DEFAULT 'expense',
+      amount DECIMAL(12,2) NOT NULL DEFAULT 0,
+      category_id TEXT REFERENCES categories(id) ON DELETE SET NULL,
+      date TEXT NOT NULL,
+      note TEXT DEFAULT '',
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS budgets (
+      id TEXT PRIMARY KEY,
+      category_id TEXT REFERENCES categories(id) ON DELETE CASCADE,
+      month TEXT NOT NULL,
+      amount DECIMAL(12,2) NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
     )
   `);
   await pool.query(`
@@ -72,9 +97,9 @@ if (useDb) initDb().catch(e => { console.error('  PG 初始化失败:', e.messag
 function readData() {
   try {
     const raw = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
-    if (Array.isArray(raw)) return { notes: raw, todos: [], categories: [] };
-    return { notes: raw.notes || [], todos: raw.todos || [], categories: raw.categories || [] };
-  } catch (e) { return { notes: [], todos: [], categories: [] }; }
+    if (Array.isArray(raw)) return { notes: raw, todos: [], categories: [], transactions: [], budgets: [] };
+    return { notes: raw.notes || [], todos: raw.todos || [], categories: raw.categories || [], transactions: raw.transactions || [], budgets: raw.budgets || [] };
+  } catch (e) { return { notes: [], todos: [], categories: [], transactions: [], budgets: [] }; }
 }
 
 function writeData(data) {
@@ -415,6 +440,324 @@ app.delete('/api/categories/:id', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ─── Transactions ───
+
+app.get('/api/transactions', async (req, res) => {
+  try {
+    const { date, category_id, type, search, month, page = 1, pageSize = 50 } = req.query;
+    if (useDb) {
+      let sql = 'SELECT t.*, c.name AS category_name, c.color AS category_color FROM transactions t LEFT JOIN categories c ON t.category_id = c.id WHERE 1=1';
+      const params = []; let i = 1;
+      if (date) { sql += ` AND t.date=$${i++}`; params.push(date); }
+      if (category_id) { sql += ` AND t.category_id=$${i++}`; params.push(category_id); }
+      if (type) { sql += ` AND t.type=$${i++}`; params.push(type); }
+      if (search) { sql += ` AND t.note ILIKE $${i++}`; params.push(`%${search}%`); }
+      if (month) { sql += ` AND t.date LIKE $${i++}`; params.push(`${month}%`); }
+      sql += ' ORDER BY t.date DESC, t.created_at DESC';
+      const { rows } = await pool.query(sql, params);
+      return res.json(rows.map(mapTransaction));
+    }
+    let data = readData();
+    let result = [...data.transactions];
+    if (date) result = result.filter(t => t.date === date);
+    if (category_id) result = result.filter(t => t.categoryId === category_id);
+    if (type) result = result.filter(t => t.type === type);
+    if (search) result = result.filter(t => (t.note || '').toLowerCase().includes(search.toLowerCase()));
+    if (month) result = result.filter(t => t.date && t.date.startsWith(month));
+    result.sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.created_at || '').localeCompare(a.created_at || ''));
+    res.json(result);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/transactions', async (req, res) => {
+  try {
+    if (useDb) {
+      const id = genId();
+      const { rows } = await pool.query(
+        `INSERT INTO transactions (id, type, amount, category_id, date, note, created_at, updated_at)
+         VALUES ($1,$2,$3,$4,$5,$6,NOW(),NOW()) RETURNING *`,
+        [id, req.body.type || 'expense', req.body.amount || 0, req.body.categoryId || null, req.body.date || new Date().toISOString().slice(0, 10), req.body.note || '']
+      );
+      res.json(mapTransaction(rows[0]));
+    } else {
+      let data = readData();
+      let t = {
+        id: genId(), type: req.body.type || 'expense', amount: parseFloat(req.body.amount) || 0,
+        categoryId: req.body.categoryId || null, date: req.body.date || new Date().toISOString().slice(0, 10),
+        note: req.body.note || '', created_at: new Date().toISOString(), updated_at: new Date().toISOString()
+      };
+      data.transactions.push(t); writeData(data);
+      res.json(t);
+    }
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.put('/api/transactions/:id', async (req, res) => {
+  try {
+    if (useDb) {
+      const sets = []; const vals = []; let i = 1;
+      ['type','amount','category_id','date','note'].forEach(col => {
+        const key = col === 'category_id' ? 'categoryId' : col;
+        if (req.body[key] !== undefined) { sets.push(`${col}=$${i++}`); vals.push(req.body[key]); }
+      });
+      if (!sets.length) return res.json({ success: true });
+      vals.push(req.params.id);
+      const { rows } = await pool.query(`UPDATE transactions SET ${sets.join(',')}, updated_at=NOW() WHERE id=$${i} RETURNING *`, vals);
+      res.json(mapTransaction(rows[0]));
+    } else {
+      let data = readData();
+      let idx = data.transactions.findIndex(t => t.id === req.params.id);
+      if (idx === -1) return res.status(404).json({ error: 'not found' });
+      let t = data.transactions[idx];
+      ['type','amount','categoryId','date','note'].forEach(k => { if (req.body[k] !== undefined) t[k] = req.body[k]; });
+      t.updated_at = new Date().toISOString();
+      writeData(data);
+      res.json(t);
+    }
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete('/api/transactions/:id', async (req, res) => {
+  try {
+    if (useDb) {
+      await pool.query('DELETE FROM transactions WHERE id=$1', [req.params.id]);
+    } else {
+      let data = readData();
+      data.transactions = data.transactions.filter(t => t.id !== req.params.id);
+      writeData(data);
+    }
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─── Transaction Stats ───
+
+app.get('/api/transactions/stats/overview', async (req, res) => {
+  try {
+    const { month } = req.query;
+    if (useDb) {
+      let dateFilter = ''; const params = [];
+      if (month) { dateFilter = ' WHERE t.date LIKE $1'; params.push(`${month}%`); }
+      const { rows } = await pool.query(`
+        SELECT
+          COALESCE(SUM(t.amount) FILTER (WHERE t.type='income'), 0)::float AS total_income,
+          COALESCE(SUM(t.amount) FILTER (WHERE t.type='expense'), 0)::float AS total_expense
+        FROM transactions t${dateFilter}`, params);
+      return res.json({ totalIncome: rows[0].total_income, totalExpense: rows[0].total_expense, balance: rows[0].total_income - rows[0].total_expense });
+    }
+    let data = readData();
+    let list = data.transactions;
+    if (month) list = list.filter(t => t.date && t.date.startsWith(month));
+    const totalIncome = list.filter(t => t.type === 'income').reduce((s, t) => s + parseFloat(t.amount || 0), 0);
+    const totalExpense = list.filter(t => t.type === 'expense').reduce((s, t) => s + parseFloat(t.amount || 0), 0);
+    res.json({ totalIncome, totalExpense, balance: totalIncome - totalExpense });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/transactions/stats/trends', async (req, res) => {
+  try {
+    const months = parseInt(req.query.months) || 6;
+    if (useDb) {
+      const { rows } = await pool.query(`
+        SELECT to_char(d, 'YYYY-MM') AS month,
+          COALESCE(SUM(t.amount) FILTER (WHERE t.type='income'), 0)::float AS income,
+          COALESCE(SUM(t.amount) FILTER (WHERE t.type='expense'), 0)::float AS expense
+        FROM generate_series(date_trunc('month', CURRENT_DATE) - ($1::int - 1) * interval '1 month', date_trunc('month', CURRENT_DATE), '1 month') d
+        LEFT JOIN transactions t ON to_char(d, 'YYYY-MM') = to_char(t.date::date, 'YYYY-MM')
+        GROUP BY d ORDER BY d
+      `, [months]);
+      return res.json(rows);
+    }
+    let data = readData();
+    let result = [];
+    let now = new Date();
+    for (let i = months - 1; i >= 0; i--) {
+      let d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      let m = d.toISOString().slice(0, 7);
+      let monthTx = data.transactions.filter(t => t.date && t.date.startsWith(m));
+      let income = monthTx.filter(t => t.type === 'income').reduce((s, t) => s + parseFloat(t.amount || 0), 0);
+      let expense = monthTx.filter(t => t.type === 'expense').reduce((s, t) => s + parseFloat(t.amount || 0), 0);
+      result.push({ month: m, income, expense });
+    }
+    res.json(result);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/transactions/stats/by-category', async (req, res) => {
+  try {
+    const { month } = req.query;
+    if (useDb) {
+      let dateFilter = ''; const params = [];
+      if (month) { dateFilter = ' AND t.date LIKE $1'; params.push(`${month}%`); }
+      const { rows } = await pool.query(`
+        SELECT c.id, c.name, c.color, COALESCE(SUM(t.amount), 0)::float AS total
+        FROM transactions t JOIN categories c ON t.category_id = c.id
+        WHERE t.type='expense'${dateFilter}
+        GROUP BY c.id, c.name, c.color ORDER BY total DESC`, params);
+      return res.json(rows);
+    }
+    let data = readData();
+    let list = data.transactions;
+    if (month) list = list.filter(t => t.date && t.date.startsWith(month));
+    list = list.filter(t => t.type === 'expense');
+    let map = {};
+    for (let t of list) {
+      if (!t.categoryId) continue;
+      if (!map[t.categoryId]) {
+        let cat = data.categories.find(c => c.id === t.categoryId);
+        map[t.categoryId] = { id: t.categoryId, name: cat ? cat.name : '未分类', color: cat ? cat.color : '#94a3b8', total: 0 };
+      }
+      map[t.categoryId].total += parseFloat(t.amount || 0);
+    }
+    res.json(Object.values(map).sort((a, b) => b.total - a.total));
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─── Budgets ───
+
+app.get('/api/budgets', async (req, res) => {
+  try {
+    const { month } = req.query;
+    if (useDb) {
+      let sql = `SELECT b.*, c.name AS category_name, c.color AS category_color
+        FROM budgets b LEFT JOIN categories c ON b.category_id = c.id`;
+      const params = [];
+      if (month) { sql += ' WHERE b.month=$1'; params.push(month); }
+      sql += ' ORDER BY b.created_at';
+      const { rows } = await pool.query(sql, params);
+
+      // 计算每个预算的已支出金额
+      const budgetsWithSpent = await Promise.all(rows.map(async (b) => {
+        let spent = 0;
+        if (b.month) {
+          const { rows: spentRows } = await pool.query(
+            `SELECT COALESCE(SUM(amount), 0)::float AS spent FROM transactions
+             WHERE type='expense' AND date LIKE $1${b.category_id ? ' AND category_id=$2' : ''}`,
+            b.category_id ? [`${b.month}%`, b.category_id] : [`${b.month}%`]
+          );
+          spent = spentRows[0].spent;
+        }
+        return { ...mapBudget(b), categoryName: b.category_name, categoryColor: b.category_color, spent };
+      }));
+      return res.json(budgetsWithSpent);
+    }
+    let data = readData();
+    let list = data.budgets;
+    if (month) list = list.filter(b => b.month === month);
+    const result = list.map(b => {
+      let spent = 0;
+      let txList = data.transactions.filter(t => t.type === 'expense');
+      if (b.month) txList = txList.filter(t => t.date && t.date.startsWith(b.month));
+      if (b.categoryId) txList = txList.filter(t => t.categoryId === b.categoryId);
+      spent = txList.reduce((s, t) => s + parseFloat(t.amount || 0), 0);
+      const cat = data.categories.find(c => c.id === b.categoryId);
+      return { ...b, categoryName: cat ? cat.name : '全局预算', categoryColor: cat ? cat.color : '#6366f1', spent };
+    });
+    res.json(result);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/budgets', async (req, res) => {
+  try {
+    if (useDb) {
+      const id = genId();
+      const { rows } = await pool.query(
+        `INSERT INTO budgets (id, category_id, month, amount, created_at, updated_at)
+         VALUES ($1,$2,$3,$4,NOW(),NOW()) RETURNING *`,
+        [id, req.body.categoryId || null, req.body.month, req.body.amount || 0]
+      );
+      res.json(mapBudget(rows[0]));
+    } else {
+      let data = readData();
+      let b = {
+        id: genId(), categoryId: req.body.categoryId || null,
+        month: req.body.month, amount: parseFloat(req.body.amount) || 0,
+        created_at: new Date().toISOString(), updated_at: new Date().toISOString()
+      };
+      data.budgets.push(b); writeData(data);
+      res.json(b);
+    }
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.put('/api/budgets/:id', async (req, res) => {
+  try {
+    if (useDb) {
+      const sets = []; const vals = []; let i = 1;
+      ['category_id','month','amount'].forEach(col => {
+        const key = col === 'category_id' ? 'categoryId' : col;
+        if (req.body[key] !== undefined) { sets.push(`${col}=$${i++}`); vals.push(req.body[key]); }
+      });
+      if (!sets.length) return res.json({ success: true });
+      vals.push(req.params.id);
+      const { rows } = await pool.query(`UPDATE budgets SET ${sets.join(',')}, updated_at=NOW() WHERE id=$${i} RETURNING *`, vals);
+      res.json(mapBudget(rows[0]));
+    } else {
+      let data = readData();
+      let idx = data.budgets.findIndex(b => b.id === req.params.id);
+      if (idx === -1) return res.status(404).json({ error: 'not found' });
+      let b = data.budgets[idx];
+      ['categoryId','month','amount'].forEach(k => { if (req.body[k] !== undefined) b[k] = req.body[k]; });
+      b.updated_at = new Date().toISOString();
+      writeData(data);
+      res.json(b);
+    }
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete('/api/budgets/:id', async (req, res) => {
+  try {
+    if (useDb) {
+      await pool.query('DELETE FROM budgets WHERE id=$1', [req.params.id]);
+    } else {
+      let data = readData();
+      data.budgets = data.budgets.filter(b => b.id !== req.params.id);
+      writeData(data);
+    }
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─── Default categories seed ───
+
+app.post('/api/categories/seed', async (req, res) => {
+  try {
+    const defaults = [
+      { name: '餐饮', color: '#f59e0b', icon: 'fa-utensils', type: 'expense' },
+      { name: '交通', color: '#3b82f6', icon: 'fa-bus', type: 'expense' },
+      { name: '购物', color: '#ec4899', icon: 'fa-bag-shopping', type: 'expense' },
+      { name: '居住', color: '#8b5cf6', icon: 'fa-home', type: 'expense' },
+      { name: '娱乐', color: '#10b981', icon: 'fa-gamepad', type: 'expense' },
+      { name: '医疗', color: '#ef4444', icon: 'fa-heart-pulse', type: 'expense' },
+      { name: '教育', color: '#06b6d4', icon: 'fa-book', type: 'expense' },
+      { name: '通讯', color: '#64748b', icon: 'fa-phone', type: 'expense' },
+      { name: '工资', color: '#22c55e', icon: 'fa-money-bill-wave', type: 'income' },
+      { name: '兼职', color: '#a855f7', icon: 'fa-briefcase', type: 'income' },
+      { name: '投资收益', color: '#f97316', icon: 'fa-chart-line', type: 'income' },
+    ];
+    if (useDb) {
+      for (const cat of defaults) {
+        const { rows } = await pool.query('SELECT id FROM categories WHERE name=$1', [cat.name]);
+        if (!rows.length) {
+          await pool.query(
+            'INSERT INTO categories (id, name, color, icon, type, sort_order) VALUES ($1,$2,$3,$4,$5,$6)',
+            [genId(), cat.name, cat.color, cat.icon, cat.type, 0]
+          );
+        }
+      }
+    } else {
+      let data = readData();
+      for (const cat of defaults) {
+        if (!data.categories.some(c => c.name === cat.name)) {
+          data.categories.push({ id: genId(), ...cat, sortOrder: 0, created_at: new Date().toISOString() });
+        }
+      }
+      writeData(data);
+    }
+    res.json({ success: true, message: '默认分类已创建' });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ─── Helpers ───
 
 function mapTodo(r) {
@@ -424,7 +767,17 @@ function mapTodo(r) {
 
 function mapCategory(r) {
   if (!r) return r;
-  return { id: r.id, name: r.name, color: r.color, icon: r.icon, sortOrder: r.sort_order, created_at: r.created_at };
+  return { id: r.id, name: r.name, color: r.color, icon: r.icon, type: r.type || 'expense', sortOrder: r.sort_order, created_at: r.created_at };
+}
+
+function mapTransaction(r) {
+  if (!r) return r;
+  return { id: r.id, type: r.type, amount: parseFloat(r.amount), categoryId: r.category_id, date: r.date, note: r.note, created_at: r.created_at, updated_at: r.updated_at };
+}
+
+function mapBudget(r) {
+  if (!r) return r;
+  return { id: r.id, categoryId: r.category_id, month: r.month, amount: parseFloat(r.amount), created_at: r.created_at, updated_at: r.updated_at };
 }
 
 // ─── Health ───
@@ -432,19 +785,20 @@ function mapCategory(r) {
 app.get('/api/health', async (req, res) => {
   try {
     if (useDb) {
-      const { rows: [{ notes, todos, categories }] } = await pool.query(
-        `SELECT (SELECT COUNT(*) FROM notes)::int AS notes, (SELECT COUNT(*) FROM todos)::int AS todos, (SELECT COUNT(*) FROM categories)::int AS categories`
+      const { rows: [{ notes, todos, categories, transactions, budgets }] } = await pool.query(
+        `SELECT (SELECT COUNT(*) FROM notes)::int AS notes, (SELECT COUNT(*) FROM todos)::int AS todos, (SELECT COUNT(*) FROM categories)::int AS categories, (SELECT COUNT(*) FROM transactions)::int AS transactions, (SELECT COUNT(*) FROM budgets)::int AS budgets`
       );
-      res.json({ status: 'ok', notes, todos, categories, db: 'postgresql', time: new Date().toISOString() });
+      res.json({ status: 'ok', notes, todos, categories, transactions, budgets, db: 'postgresql', time: new Date().toISOString() });
     } else {
       let data = readData();
-      res.json({ status: 'ok', notes: data.notes.length, todos: data.todos.length, categories: data.categories.length, db: 'file', time: new Date().toISOString() });
+      res.json({ status: 'ok', notes: data.notes.length, todos: data.todos.length, categories: data.categories.length, transactions: data.transactions.length, budgets: data.budgets.length, db: 'file', time: new Date().toISOString() });
     }
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // ─── Redirects ───
 
+app.get('/ledger', (req, res) => res.sendFile(path.join(__dirname, 'ledger.html')));
 app.get('/todos', (req, res) => res.sendFile(path.join(__dirname, 'todos.html')));
 app.get('/notes', (req, res) => res.sendFile(path.join(__dirname, 'notes.html')));
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'sleep-tracker.html')));
@@ -455,7 +809,7 @@ app.use(express.static(__dirname));
 
 const PORT = process.env.PORT || 3333;
 app.listen(PORT, () => {
-  console.log(`\n  Notes & Todos API 服务已启动`);
+  console.log(`\n  记账 & 待办 & 记事 API 服务已启动`);
   console.log(`  \x1b[36mhttp://localhost:${PORT}\x1b[0m`);
   if (useDb) console.log(`  数据库: PostgreSQL (DATABASE_URL)`);
   else console.log(`  数据文件: ${DATA_FILE}`);
