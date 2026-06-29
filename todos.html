@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>每日待办</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+:root {
+  --bg: #f5f7fa; --surface: #fff; --surface2: #f0f2f5;
+  --text: #1e293b; --text2: #64748b; --text3: #94a3b8;
+  --border: #e2e8f0; --border2: #cbd5e1;
+  --primary: #6366f1; --primary-hover: #4f46e5; --primary-light: #eef2ff; --primary-text: #6366f1;
+  --success: #10b981; --success-light: #d1fae5;
+  --danger: #ef4444; --danger-light: #fef2f2;
+  --warn: #f59e0b; --warn-light: #fef3c7;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.04);
+  --shadow: 0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.08);
+  --shadow-lg: 0 10px 40px rgba(0,0,0,.12);
+  --radius: 10px; --radius-sm: 6px; --radius-lg: 16px;
+  --font: -apple-system, "SF Pro Display", "Microsoft YaHei", sans-serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; padding: 24px 16px; }
+.container { max-width: 640px; margin: 0 auto; }
+h1 { font-size: 22px; font-weight: 700; text-align: center; color: var(--text); margin-bottom: 6px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+h1 i { color: var(--primary); }
+.nav-links { text-align: center; margin-bottom: 20px; }
+.nav-links a { color: var(--text3); text-decoration: none; font-size: 13px; margin: 0 10px; transition: color .2s; }
+.nav-links a:hover { color: var(--primary); }
+.card { background: var(--surface); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 12px; box-shadow: var(--shadow); border: 1px solid var(--border); transition: box-shadow .2s; }
+.card:hover { box-shadow: var(--shadow-md); }
+.card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.card-header h3 { font-size: 14px; font-weight: 600; color: var(--text2); }
+.date-input { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 15px; outline: none; transition: border .2s; font-family: var(--font); background: var(--surface); color: var(--text); }
+.date-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+.input-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.input-row .text-input { flex: 1; min-width: 160px; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; outline: none; transition: border .2s; font-family: var(--font); background: var(--surface); color: var(--text); }
+.input-row .text-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+.select-sm { padding: 9px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; outline: none; background: var(--surface); color: var(--text); cursor: pointer; font-family: var(--font); }
+.select-sm:focus { border-color: var(--primary); }
+.btn { padding: 9px 18px; border: none; border-radius: var(--radius-sm); font-size: 14px; font-weight: 500; cursor: pointer; transition: all .2s; font-family: var(--font); display: inline-flex; align-items: center; gap: 6px; }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-hover); box-shadow: var(--shadow-sm); }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.btn-ghost { background: transparent; color: var(--text2); border: 1px solid var(--border); }
+.btn-ghost:hover { background: var(--surface2); color: var(--text); }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-danger:hover { background: #dc2626; }
+.btn-success { background: var(--success); color: #fff; }
+.btn-success:hover { background: #059669; }
+.btn-text { background: none; border: none; color: var(--text3); cursor: pointer; padding: 4px; border-radius: var(--radius-sm); font-size: 13px; transition: all .2s; }
+.btn-text:hover { color: var(--text); background: var(--surface2); }
+.stats { display: flex; gap: 8px; }
+.stat { flex: 1; text-align: center; padding: 10px 6px; background: var(--bg); border-radius: var(--radius-sm); }
+.stat-value { font-size: 22px; font-weight: 700; color: var(--text); }
+.stat-label { font-size: 11px; color: var(--text3); margin-top: 2px; }
+.filter-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.filter-bar .search-wrap { flex: 1; min-width: 120px; position: relative; }
+.filter-bar .search-wrap input { width: 100%; padding: 8px 12px 8px 32px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; outline: none; font-family: var(--font); background: var(--surface); color: var(--text); }
+.filter-bar .search-wrap input:focus { border-color: var(--primary); }
+.filter-bar .search-wrap i { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 13px; color: var(--text3); pointer-events: none; }
+.filter-group { display: flex; gap: 4px; }
+.filter-chip { padding: 6px 12px; border-radius: 20px; font-size: 12px; border: 1px solid var(--border); background: var(--surface); color: var(--text2); cursor: pointer; transition: all .2s; font-family: var(--font); }
+.filter-chip:hover { border-color: var(--primary); color: var(--primary); }
+.filter-chip.active { background: var(--primary-light); border-color: var(--primary); color: var(--primary-text); font-weight: 500; }
+.filter-chip.danger.active { background: var(--danger-light); border-color: var(--danger); color: var(--danger); }
+.filter-chip.success.active { background: var(--success-light); border-color: var(--success); color: var(--success); }
+.todo-list { min-height: 60px; }
+.todo-card { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); transition: background .15s; }
+.todo-card:last-child { border-bottom: none; }
+.todo-card:hover { background: var(--surface2); margin: 0 -8px; padding-left: 8px; padding-right: 8px; border-radius: var(--radius-sm); }
+.todo-priority { width: 4px; height: 28px; border-radius: 2px; flex-shrink: 0; }
+.todo-priority.p2 { background: var(--danger); }
+.todo-priority.p1 { background: var(--warn); }
+.todo-priority.p0 { background: var(--text3); opacity: .3; }
+.todo-checkbox { width: 18px; height: 18px; cursor: pointer; accent-color: var(--success); flex-shrink: 0; }
+.todo-content { flex: 1; min-width: 0; }
+.todo-text { font-size: 14px; line-height: 1.4; word-break: break-word; cursor: pointer; transition: color .2s; }
+.todo-text.done { text-decoration: line-through; color: var(--text3); }
+.todo-meta { display: flex; gap: 6px; align-items: center; margin-top: 4px; flex-wrap: wrap; }
+.todo-badge { font-size: 10px; padding: 1px 6px; border-radius: 4px; font-weight: 500; }
+.todo-badge.category { background: var(--primary-light); color: var(--primary-text); }
+.todo-badge.repeat { background: var(--warn-light); color: #b45309; }
+.todo-actions { display: flex; gap: 4px; flex-shrink: 0; opacity: 0; transition: opacity .2s; }
+.todo-card:hover .todo-actions { opacity: 1; }
+.todo-actions .btn-icon { width: 28px; height: 28px; border: none; border-radius: var(--radius-sm); background: transparent; color: var(--text3); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px; transition: all .2s; }
+.todo-actions .btn-icon:hover { background: var(--surface2); color: var(--text); }
+.todo-actions .btn-icon.danger:hover { background: var(--danger-light); color: var(--danger); }
+.edit-input { width: 100%; padding: 6px 10px; border: 1px solid var(--primary); border-radius: var(--radius-sm); font-size: 14px; outline: none; font-family: var(--font); }
+.empty-state { text-align: center; padding: 40px 20px; color: var(--text3); }
+.empty-state i { font-size: 36px; margin-bottom: 12px; opacity: .4; }
+.empty-state p { font-size: 13px; }
+
+/* Modal */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+.modal-overlay.show { display: flex; }
+.modal { background: var(--surface); border-radius: var(--radius-lg); padding: 24px; width: 100%; max-width: 480px; max-height: 80vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
+.modal h2 { font-size: 16px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.modal-close { float: right; background: none; border: none; font-size: 18px; color: var(--text3); cursor: pointer; padding: 4px; }
+.modal-close:hover { color: var(--text); }
+.modal-form { display: flex; flex-direction: column; gap: 12px; }
+.modal-form label { font-size: 13px; font-weight: 500; color: var(--text2); }
+.modal-form input, .modal-form select { padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; outline: none; font-family: var(--font); }
+.modal-form input:focus, .modal-form select:focus { border-color: var(--primary); }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }
+
+/* Category list in modal */
+.cat-list { display: flex; flex-direction: column; gap: 6px; }
+.cat-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: var(--radius-sm); background: var(--surface2); }
+.cat-color { width: 16px; height: 16px; border-radius: 4px; flex-shrink: 0; }
+.cat-name { flex: 1; font-size: 13px; }
+.cat-actions { display: flex; gap: 4px; }
+
+/* Trend chart */
+.chart-container { width: 100%; overflow-x: auto; }
+.chart-container svg { width: 100%; min-width: 400px; }
+.chart-tooltip { position: fixed; background: var(--text); color: #fff; padding: 6px 10px; border-radius: var(--radius-sm); font-size: 12px; pointer-events: none; opacity: 0; transition: opacity .15s; z-index: 100; }
+
+/* Repeat config selector */
+.repeat-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.repeat-row select, .repeat-row input { padding: 6px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; outline: none; font-family: var(--font); }
+
+/* Priority colors in select */
+.opt-high { color: var(--danger); }
+.opt-med { color: var(--warn); }
+.opt-low { color: var(--text3); }
+
+/* Toast */
+.toast { position: fixed; top: 16px; left: 50%; transform: translateX(-50%) translateY(-80px); padding: 10px 20px; border-radius: var(--radius-sm); color: #fff; font-size: 13px; font-weight: 500; z-index: 99999; opacity: 0; transition: all .3s ease; pointer-events: none; box-shadow: var(--shadow-lg); }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.success { background: var(--success); }
+.toast.error { background: var(--danger); }
+.toast.info { background: var(--primary); }
+
+@media (max-width: 480px) {
+  body { padding: 16px 10px; }
+  .card { padding: 12px 14px; }
+  .stats { gap: 4px; }
+  .stat-value { font-size: 18px; }
+  .input-row .text-input { min-width: 100%; }
+  .filter-chip { font-size: 11px; padding: 5px 10px; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1><i class="fas fa-check-circle"></i> 每日待办</h1>
+
+  <div class="nav-links">
+    <a href="/">睡眠记录</a>
+    <a href="/notes">笔记</a>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3><i class="far fa-calendar-alt"></i> 日期</h3>
+    </div>
+    <input type="date" class="date-input" id="date">
+    <div class="input-row">
+      <input type="text" class="text-input" id="todoInput" placeholder="添加待办..." maxlength="200">
+      <select class="select-sm" id="prioritySelect">
+        <option value="0" class="opt-low">○ 低</option>
+        <option value="1" class="opt-med" selected>● 中</option>
+        <option value="2" class="opt-high">⭐ 高</option>
+      </select>
+      <select class="select-sm" id="categorySelect">
+        <option value="">未分类</option>
+      </select>
+      <button class="btn btn-primary" onclick="addTodo()"><i class="fas fa-plus"></i> 添加</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="stats" id="stats"></div>
+  </div>
+
+  <div class="card">
+    <div class="filter-bar">
+      <div class="search-wrap">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" placeholder="搜索..." oninput="render()">
+      </div>
+      <div class="filter-group">
+        <button class="filter-chip active" data-filter="all" onclick="setFilter('status','all')">全部</button>
+        <button class="filter-chip" data-filter="pending" onclick="setFilter('status','pending')">待完成</button>
+        <button class="filter-chip success" data-filter="done" onclick="setFilter('status','done')">已完成</button>
+      </div>
+    </div>
+    <div class="filter-bar" style="margin-top:8px">
+      <select class="select-sm" id="filterPriority" onchange="render()">
+        <option value="">全部优先级</option>
+        <option value="2">⭐ 高</option>
+        <option value="1">● 中</option>
+        <option value="0">○ 低</option>
+      </select>
+      <select class="select-sm" id="filterCategory" onchange="render()">
+        <option value="">全部分类</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="todo-list" id="todos"><div class="empty-state"><i class="far fa-list-alt"></i><p>暂无待办</p></div></div>
+  </div>
+</div>
+
+<!-- Floating buttons -->
+<div style="position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:8px;z-index:100">
+  <button class="btn btn-primary" style="border-radius:50%;width:48px;height:48px;padding:0;box-shadow:var(--shadow-md)" onclick="showTrends()" title="历史趋势"><i class="fas fa-chart-line"></i></button>
+  <button class="btn btn-ghost" style="border-radius:50%;width:48px;height:48px;padding:0;box-shadow:var(--shadow-md)" onclick="showCategories()" title="分类管理"><i class="fas fa-tags"></i></button>
+</div>
+
+<!-- Category Modal -->
+<div class="modal-overlay" id="categoryModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('categoryModal')">&times;</button>
+    <h2><i class="fas fa-tags"></i> 分类管理</h2>
+    <div class="modal-form">
+      <div class="cat-list" id="catList"></div>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="catNameInput" placeholder="分类名称" style="flex:1">
+        <input type="color" id="catColorInput" value="#6366f1" style="width:40px;height:40px;padding:2px;cursor:pointer">
+        <button class="btn btn-primary" onclick="addCategory()"><i class="fas fa-plus"></i></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Trends Modal -->
+<div class="modal-overlay" id="trendsModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('trendsModal')">&times;</button>
+    <h2><i class="fas fa-chart-line"></i> 历史趋势</h2>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <button class="filter-chip" data-range="7" onclick="setTrendRange(7)">7天</button>
+      <button class="filter-chip active" data-range="14" onclick="setTrendRange(14)">14天</button>
+      <button class="filter-chip" data-range="30" onclick="setTrendRange(30)">30天</button>
+    </div>
+    <div class="chart-container" id="chartContainer"><p style="color:var(--text3);font-size:13px;text-align:center;padding:40px 0">加载中...</p></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';
+let categories = [];
+let filterState = { status: 'all', priority: '', category: '' };
+let trendDays = 14;
+
+function toast(msg, type = 'success') {
+  let el = document.getElementById('toast');
+  el.textContent = msg; el.className = 'toast ' + type;
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
+  setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+async function api(url, options) {
+  let res = await fetch(API + url, {
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    ...options
+  });
+  if (!res.ok) { let txt = await res.text(); throw new Error(txt); }
+  return res.json();
+}
+
+// ─── Categories ───
+
+async function loadCategories() {
+  try {
+    categories = await api('/api/categories');
+    let sel = document.getElementById('categorySelect');
+    let fsel = document.getElementById('filterCategory');
+    let keep = sel.value;
+    sel.innerHTML = '<option value="">未分类</option>';
+    fsel.innerHTML = '<option value="">全部分类</option>';
+    categories.forEach(c => {
+      let o1 = document.createElement('option');
+      o1.value = c.id; o1.textContent = c.name;
+      if (c.id === keep) o1.selected = true;
+      sel.appendChild(o1);
+      let o2 = document.createElement('option');
+      o2.value = c.id; o2.textContent = c.name;
+      fsel.appendChild(o2);
+    });
+  } catch (e) { console.error(e); }
+}
+
+async function addCategory() {
+  let name = document.getElementById('catNameInput').value.trim();
+  if (!name) return;
+  let color = document.getElementById('catColorInput').value;
+  try {
+    await api('/api/categories', { method: 'POST', body: JSON.stringify({ name, color }) });
+    document.getElementById('catNameInput').value = '';
+    await loadCategories();
+    renderCatList();
+  } catch (e) { toast('添加分类失败', 'error'); }
+}
+
+async function deleteCategory(id) {
+  if (!confirm('删除分类后，关联待办将变为未分类。确认删除？')) return;
+  try {
+    await api('/api/categories/' + id, { method: 'DELETE' });
+    await loadCategories();
+    renderCatList();
+    render();
+  } catch (e) { toast('删除失败', 'error'); }
+}
+
+function renderCatList() {
+  let el = document.getElementById('catList');
+  if (categories.length === 0) { el.innerHTML = '<div style="color:var(--text3);font-size:13px;text-align:center;padding:12px">暂无分类</div>'; return; }
+  el.innerHTML = categories.map(c =>
+    '<div class="cat-item">' +
+      '<div class="cat-color" style="background:' + c.color + '"></div>' +
+      '<span class="cat-name">' + escapeHtml(c.name) + '</span>' +
+      '<div class="cat-actions">' +
+        '<button class="btn-text" onclick="editCategory(\'' + c.id + '\')"><i class="fas fa-pen"></i></button>' +
+        '<button class="btn-text" style="color:var(--danger)" onclick="deleteCategory(\'' + c.id + '\')"><i class="fas fa-trash"></i></button>' +
+      '</div>' +
+    '</div>'
+  ).join('');
+}
+
+function editCategory(id) {
+  let c = categories.find(x => x.id === id);
+  if (!c) return;
+  let name = prompt('分类名称：', c.name);
+  if (name && name.trim()) {
+    api('/api/categories/' + id, { method: 'PUT', body: JSON.stringify({ name: name.trim() }) }).then(() => {
+      loadCategories(); renderCatList();
+    });
+  }
+}
+
+function showCategories() {
+  renderCatList();
+  document.getElementById('categoryModal').classList.add('show');
+}
+
+// ─── Todos ───
+
+function getCategoryColor(id) {
+  let c = categories.find(x => x.id === id);
+  return c ? c.color : '#6366f1';
+}
+
+function getCategoryName(id) {
+  let c = categories.find(x => x.id === id);
+  return c ? c.name : '';
+}
+
+async function addTodo() {
+  let date = document.getElementById('date').value;
+  let text = document.getElementById('todoInput').value.trim();
+  if (!date) { toast('请选择日期', 'error'); return; }
+  if (!text) { toast('请输入待办内容', 'error'); return; }
+  let priority = parseInt(document.getElementById('prioritySelect').value);
+  let categoryId = document.getElementById('categorySelect').value || null;
+  try {
+    await api('/api/todos', { method: 'POST', body: JSON.stringify({ date, text, priority, categoryId }) });
+    document.getElementById('todoInput').value = '';
+    render();
+    toast('已添加');
+  } catch (e) { toast('添加失败', 'error'); }
+}
+
+async function toggleTodo(id, completed) {
+  try {
+    await api('/api/todos/' + id, { method: 'PUT', body: JSON.stringify({ completed }) });
+    render();
+  } catch (e) { toast('更新失败', 'error'); }
+}
+
+async function deleteTodo(id) {
+  if (!confirm('确认删除？')) return;
+  try {
+    await api('/api/todos/' + id, { method: 'DELETE' });
+    render();
+    toast('已删除');
+  } catch (e) { toast('删除失败', 'error'); }
+}
+
+function startEdit(id) {
+  let span = document.getElementById('text-' + id);
+  let current = span.textContent;
+  let input = document.createElement('input');
+  input.type = 'text'; input.className = 'edit-input'; input.value = current;
+  input.dataset.id = id;
+  span.replaceWith(input);
+  input.focus();
+  input.select();
+  function save() {
+    let val = input.value.trim();
+    if (val && val !== current) {
+      api('/api/todos/' + id, { method: 'PUT', body: JSON.stringify({ text: val }) }).then(render);
+    } else { render(); }
+  }
+  input.addEventListener('blur', save);
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { input.blur(); }
+    if (e.key === 'Escape') { render(); }
+  });
+}
+
+function setFilter(type, value) {
+  if (type === 'status') {
+    filterState.status = value;
+    document.querySelectorAll('.filter-group .filter-chip').forEach(el => {
+      el.classList.toggle('active', el.dataset.filter === value);
+    });
+  }
+  render();
+}
+
+function getFilteredTodos(todos) {
+  let q = document.getElementById('searchInput').value.trim().toLowerCase();
+  let fp = document.getElementById('filterPriority').value;
+  let fc = document.getElementById('filterCategory').value;
+  return todos.filter(t => {
+    if (filterState.status === 'pending' && t.completed) return false;
+    if (filterState.status === 'done' && !t.completed) return false;
+    if (q && !t.text.toLowerCase().includes(q)) return false;
+    if (fp && t.priority !== parseInt(fp)) return false;
+    if (fc && t.categoryId !== fc) return false;
+    return true;
+  });
+}
+
+async function render() {
+  let date = document.getElementById('date').value;
+  let todos, history;
+  try {
+    [todos, history] = await Promise.all([api('/api/todos?date=' + date), api('/api/todos/history?days=' + trendDays)]);
+  } catch (e) { console.error(e); return; }
+  let statsEl = document.getElementById('stats');
+  let container = document.getElementById('todos');
+  let total = todos.length;
+  let done = todos.filter(t => t.completed).length;
+  let pending = total - done;
+  let rate = total ? Math.round(done / total * 100) : 0;
+  statsEl.innerHTML =
+    '<div class="stat"><div class="stat-value">' + total + '</div><div class="stat-label">总计</div></div>' +
+    '<div class="stat"><div class="stat-value">' + done + '</div><div class="stat-label">已完成</div></div>' +
+    '<div class="stat"><div class="stat-value">' + pending + '</div><div class="stat-label">待完成</div></div>' +
+    '<div class="stat"><div class="stat-value">' + rate + '%</div><div class="stat-label">完成率</div></div>';
+  let filtered = getFilteredTodos(todos);
+  if (filtered.length === 0) {
+    container.innerHTML = '<div class="empty-state"><i class="far fa-list-alt"></i><p>' + (todos.length ? '没有匹配的待办' : '暂无待办') + '</p></div>';
+    return;
+  }
+  container.innerHTML = filtered.map(t => {
+    let prioClass = 'p' + (t.priority || 0);
+    let catColor = t.categoryId ? getCategoryColor(t.categoryId) : '';
+    let catName = t.categoryId ? getCategoryName(t.categoryId) : '';
+    return '<div class="todo-card">' +
+      '<div class="todo-priority ' + prioClass + '"></div>' +
+      '<input type="checkbox" class="todo-checkbox" ' + (t.completed ? 'checked' : '') + ' onchange="toggleTodo(\'' + t.id + '\',' + (!t.completed) + ')">' +
+      '<div class="todo-content">' +
+        '<div class="todo-text' + (t.completed ? ' done' : '') + '" id="text-' + t.id + '" ondblclick="startEdit(\'' + t.id + '\')">' + escapeHtml(t.text) + '</div>' +
+        '<div class="todo-meta">' +
+          (t.categoryId ? '<span class="todo-badge category" style="background:' + catColor + '20;color:' + catColor + '">' + escapeHtml(catName) + '</span>' : '') +
+          (t.repeatConfig ? '<span class="todo-badge repeat"><i class="fas fa-redo"></i> ' + repeatLabel(t.repeatConfig) + '</span>' : '') +
+        '</div>' +
+      '</div>' +
+      '<div class="todo-actions">' +
+        '<button class="btn-icon" onclick="startEdit(\'' + t.id + '\')" title="编辑"><i class="fas fa-pen"></i></button>' +
+        '<button class="btn-icon danger" onclick="deleteTodo(\'' + t.id + '\')" title="删除"><i class="fas fa-trash"></i></button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function repeatLabel(cfg) {
+  if (!cfg) return '';
+  switch (cfg.type) {
+    case 'daily': return '每天';
+    case 'weekday': return '工作日';
+    case 'weekly': return '每周' + ['日','一','二','三','四','五','六'][cfg.dayOfWeek];
+    case 'monthly': return '每月' + cfg.dayOfMonth + '日';
+    default: return '';
+  }
+}
+
+function escapeHtml(str) {
+  let d = document.createElement('div');
+  d.appendChild(document.createTextNode(str));
+  return d.innerHTML;
+}
+
+// ─── Trends ───
+
+function setTrendRange(days) {
+  trendDays = days;
+  document.querySelectorAll('#trendsModal .filter-chip').forEach(el => {
+    el.classList.toggle('active', parseInt(el.dataset.range) === days);
+  });
+  renderChart();
+}
+
+function showTrends() {
+  document.getElementById('trendsModal').classList.add('show');
+  renderChart();
+}
+
+async function renderChart() {
+  let container = document.getElementById('chartContainer');
+  try {
+    let data = await api('/api/todos/history?days=' + trendDays);
+    if (!data.length) { container.innerHTML = '<p style="color:var(--text3);font-size:13px;text-align:center;padding:40px 0">暂无数据</p>'; return; }
+    let w = Math.max(data.length * 44, 400), h = 220;
+    let pad = { top: 16, right: 16, bottom: 36, left: 36 };
+    let cw = w - pad.left - pad.right, ch = h - pad.top - pad.bottom;
+    let maxRate = 100;
+    let barW = Math.min(28, cw / data.length - 6);
+    let html = '<svg viewBox="0 0 ' + w + ' ' + h + '" style="width:100%;height:auto">';
+    html += '<defs><linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--primary)"/><stop offset="100%" stop-color="var(--primary)" stop-opacity=".4"/></linearGradient></defs>';
+    // grid lines
+    for (let r = 0; r <= 100; r += 25) {
+      let y = pad.top + ch * (1 - r / maxRate);
+      html += '<line x1="' + pad.left + '" y1="' + y + '" x2="' + (w - pad.right) + '" y2="' + y + '" stroke="var(--border)" stroke-width="1"/>';
+      html += '<text x="' + (pad.left - 6) + '" y="' + (y + 4) + '" text-anchor="end" fill="var(--text3)" font-size="10">' + r + '%</text>';
+    }
+    // bars + trend line
+    let points = [];
+    data.forEach((d, i) => {
+      let x = pad.left + (i + 0.5) * (cw / data.length);
+      let barH = (d.rate / maxRate) * ch;
+      let y = pad.top + ch - barH;
+      let color = d.total ? (d.rate >= 80 ? 'var(--success)' : d.rate >= 50 ? 'var(--warn)' : 'var(--danger)') : 'var(--border)';
+      html += '<rect x="' + (x - barW / 2) + '" y="' + y + '" width="' + barW + '" height="' + Math.max(barH, 2) + '" rx="3" fill="' + color + '" opacity=".8" onmouseenter="showTooltip(event,\'' + d.date + ' - ' + d.done + '/' + d.total + ' (' + d.rate + '%)\')" onmouseleave="hideTooltip()"/>';
+      // date labels
+      if (i % Math.max(1, Math.floor(data.length / 6)) === 0) {
+        html += '<text x="' + x + '" y="' + (h - pad.bottom + 16) + '" text-anchor="middle" fill="var(--text3)" font-size="9">' + d.date.slice(5) + '</text>';
+      }
+      points.push({ x, y: pad.top + ch - barH });
+    });
+    // trend line
+    if (points.length > 1) {
+      let lineD = points.map((p, i) => (i === 0 ? 'M' : 'L') + p.x.toFixed(1) + ',' + p.y.toFixed(1)).join(' ');
+      html += '<path d="' + lineD + '" fill="none" stroke="var(--primary)" stroke-width="2" stroke-dasharray="4,3" opacity=".6"/>';
+    }
+    html += '</svg>';
+    container.innerHTML = html;
+  } catch (e) { container.innerHTML = '<p style="color:var(--danger);font-size:13px">加载失败</p>'; }
+}
+
+function showTooltip(e, text) {
+  let el = document.getElementById('chartTooltip') || (() => {
+    let t = document.createElement('div');
+    t.id = 'chartTooltip'; t.className = 'chart-tooltip';
+    document.body.appendChild(t);
+    return t;
+  })();
+  el.textContent = text;
+  el.style.left = (e.clientX + 10) + 'px';
+  el.style.top = (e.clientY - 30) + 'px';
+  el.style.opacity = 1;
+}
+
+function hideTooltip() {
+  let el = document.getElementById('chartTooltip');
+  if (el) el.style.opacity = 0;
+}
+
+// ─── Modal ───
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show');
+}
+
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('show');
+  });
+});
+
+// ─── Init ───
+
+document.getElementById('date').value = new Date().toISOString().slice(0, 10);
+document.getElementById('todoInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') addTodo();
+});
+document.getElementById('date').addEventListener('change', render);
+
+loadCategories().then(render);
+</script>
+</body>
+</html>
