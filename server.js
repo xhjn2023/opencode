@@ -807,11 +807,14 @@ app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'sleep-tracker.html
 
 app.use(express.static(__dirname));
 
-const PORT = process.env.PORT || 3333;
-app.listen(PORT, () => {
-  console.log(`\n  记账 & 待办 & 记事 API 服务已启动`);
-  console.log(`  \x1b[36mhttp://localhost:${PORT}\x1b[0m`);
-  if (useDb) console.log(`  数据库: PostgreSQL (DATABASE_URL)`);
-  else console.log(`  数据文件: ${DATA_FILE}`);
-  console.log(`  按 Ctrl+C 停止\n`);
-});
+if (require.main === module) {
+  const PORT = process.env.PORT || 3333;
+  app.listen(PORT, () => {
+    console.log(`\n  记账 & 待办 & 记事 API 服务已启动`);
+    console.log(`  \x1b[36mhttp://localhost:${PORT}\x1b[0m`);
+    if (useDb) console.log(`  数据库: PostgreSQL (DATABASE_URL)`);
+    else console.log(`  数据文件: ${DATA_FILE}`);
+    console.log(`  按 Ctrl+C 停止\n`);
+  });
+}
+module.exports = app;
